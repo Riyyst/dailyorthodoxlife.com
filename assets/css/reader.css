@@ -1,0 +1,796 @@
+:root {
+  --page: #fef8db;
+  --paper: #fffdf5;
+  --ink: #2d2117;
+  --muted: #71624e;
+  --gold: #c79b2c;
+  --line: rgba(83, 61, 34, 0.25);
+  --toolbar: rgba(255, 253, 245, 0.96);
+  --text-size: 1rem;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  overflow-x: hidden;
+  background: var(--page);
+  color: var(--ink);
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+}
+
+button,
+select,
+input {
+  font: inherit;
+}
+
+button,
+select,
+input {
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  background: #fffdf5;
+  color: var(--ink);
+}
+
+button {
+  min-height: 30px;
+  padding: 0.3rem 0.56rem;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: border-color 150ms ease, background 150ms ease, transform 150ms ease, color 150ms ease;
+}
+
+button:hover,
+button:focus-visible,
+select:focus-visible,
+input:focus-visible {
+  border-color: var(--gold);
+  outline: 2px solid rgba(199, 155, 44, 0.34);
+  outline-offset: 1px;
+}
+
+button:hover {
+  background: #fff9e8;
+}
+
+button:active {
+  transform: translateY(1px);
+}
+
+button:disabled {
+  cursor: not-allowed;
+  opacity: 0.38;
+}
+
+.visually-hidden {
+  position: absolute !important;
+  width: 1px !important;
+  height: 1px !important;
+  padding: 0 !important;
+  margin: -1px !important;
+  overflow: hidden !important;
+  clip: rect(0, 0, 0, 0) !important;
+  white-space: nowrap !important;
+  border: 0 !important;
+}
+
+.back-link {
+  position: fixed;
+  top: 0.75rem;
+  left: 0.85rem;
+  z-index: 100;
+  color: var(--ink);
+  font-size: 0.86rem;
+  font-weight: 650;
+  text-decoration: none;
+  transition: color 150ms ease, transform 150ms ease;
+}
+
+.back-link:hover,
+.back-link:focus-visible {
+  color: var(--gold);
+  transform: translateX(-2px);
+  outline: 2px solid rgba(199, 155, 44, 0.4);
+  outline-offset: 4px;
+}
+
+.reader-page {
+  width: min(1500px, 100%);
+  margin: 0 auto;
+  padding: 0.75rem clamp(0.55rem, 2vw, 1.4rem) 2rem;
+}
+
+.reader-header {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 0.1rem 10rem 0.45rem;
+  text-align: center;
+}
+
+.reader-logo {
+  width: clamp(38px, 4.6vw, 58px);
+  max-height: 72px;
+  margin-bottom: 0.25rem;
+  object-fit: contain;
+}
+
+.reader-header h1,
+.text-reader h2 {
+  margin: 0;
+  font-family: Georgia, "Times New Roman", serif;
+  font-weight: 600;
+}
+
+.reader-header h1 {
+  font-size: clamp(1.65rem, 3.5vw, 2.6rem);
+}
+
+.eyebrow {
+  margin: 0 0 0.14rem;
+  color: var(--muted);
+  font-size: 0.66rem;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.reader-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 0.28rem;
+  width: 100%;
+  min-height: 40px;
+  overflow-x: auto;
+  padding: 0.26rem 0.34rem;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--toolbar);
+  box-shadow: 0 4px 12px rgba(70, 48, 20, 0.06);
+  scrollbar-width: thin;
+}
+
+.reader-toolbar select {
+  flex: 0 0 auto;
+  height: 30px;
+  padding: 0 1.7rem 0 0.5rem;
+  cursor: pointer;
+}
+
+.reader-toolbar select[hidden] {
+  display: none;
+}
+
+.book-select {
+  width: clamp(165px, 21vw, 245px);
+}
+
+.part-select {
+  width: clamp(145px, 18vw, 215px);
+}
+
+.reader-toolbar .square-tool {
+  width: 32px;
+  padding-inline: 0;
+}
+
+.toolbar-divider {
+  flex: 0 0 1px;
+  align-self: stretch;
+  margin: 0.05rem 0.08rem;
+  background: var(--line);
+}
+
+.reader-status {
+  min-height: 1.15rem;
+  margin: 0.3rem 0 0.1rem;
+  color: var(--muted);
+  font-size: 0.76rem;
+  text-align: center;
+}
+
+.book-stage {
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  width: 100%;
+  min-height: 520px;
+  overflow: auto;
+  padding: 0.35rem 0.2rem 0.2rem;
+  background: transparent;
+}
+
+.book-shell {
+  position: relative;
+  display: inline-flex;
+  justify-content: center;
+  min-width: min-content;
+  filter: drop-shadow(0 14px 18px rgba(54, 35, 13, 0.2));
+}
+
+.book-spread {
+  position: relative;
+  display: block;
+}
+
+.book-page {
+  position: relative;
+  overflow: hidden;
+  border: 1px solid rgba(80, 56, 29, 0.22);
+  border-radius: 5px;
+  background: var(--paper);
+  box-shadow: inset 0 0 16px rgba(73, 48, 20, 0.045), 0 2px 8px rgba(42, 29, 14, 0.15);
+}
+
+.book-page canvas {
+  display: block;
+  width: 100%;
+  height: auto;
+  background: #fff;
+}
+
+
+.book-page .textLayer {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  overflow: hidden;
+  opacity: 0.25;
+  line-height: 1;
+  text-align: initial;
+  transform-origin: 0 0;
+  -webkit-text-size-adjust: none;
+  text-size-adjust: none;
+}
+
+.book-page .textLayer :is(span, br) {
+  position: absolute;
+  color: transparent;
+  white-space: pre;
+  cursor: text;
+  transform-origin: 0 0;
+}
+
+.book-page .textLayer ::selection {
+  background: rgba(246, 216, 109, 0.9);
+}
+
+.book-page .annotation-layer {
+  position: absolute;
+  inset: 0;
+  z-index: 3;
+  pointer-events: none;
+}
+
+.book-page .pdf-link {
+  position: absolute;
+  display: block;
+  pointer-events: auto;
+  border: 1px solid transparent;
+  border-radius: 2px;
+  background: transparent;
+  cursor: pointer;
+}
+
+.book-page .pdf-link:hover,
+.book-page .pdf-link:focus-visible {
+  border-color: rgba(199, 155, 44, 0.72);
+  background: rgba(246, 216, 109, 0.18);
+  outline: 2px solid rgba(199, 155, 44, 0.35);
+  outline-offset: 1px;
+}
+
+.page-loading {
+  width: min(560px, 88vw);
+  min-height: min(620px, 66vh);
+  display: grid;
+  place-items: center;
+  padding: 2rem;
+  border: 1px solid var(--line);
+  border-radius: 5px;
+  background: var(--paper);
+  color: var(--muted);
+  text-align: center;
+}
+
+.page-navigation {
+  display: grid;
+  grid-template-columns: 74px minmax(0, 1fr) 74px;
+  align-items: center;
+  width: min(740px, 100%);
+  min-height: 58px;
+  margin: 0 auto;
+  padding: 0.15rem 0 0.4rem;
+}
+
+.page-arrow {
+  display: grid;
+  place-items: center;
+  width: 64px;
+  height: 52px;
+  min-height: 52px;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  color: var(--ink);
+  font-family: Arial, Helvetica, sans-serif;
+  font-size: 3.15rem;
+  font-weight: 900;
+  line-height: 1;
+}
+
+.page-arrow:hover,
+.page-arrow:focus-visible {
+  border: 0;
+  background: transparent;
+  color: var(--gold);
+  outline: 0;
+  transform: scale(1.09);
+}
+
+.page-arrow:disabled {
+  background: transparent;
+  color: var(--muted);
+  opacity: 0.22;
+}
+
+.page-arrow-left {
+  justify-self: start;
+}
+
+.page-arrow-right {
+  justify-self: end;
+}
+
+.location-label {
+  min-width: 0;
+  overflow: hidden;
+  color: var(--muted);
+  font-size: 0.88rem;
+  font-weight: 650;
+  text-align: center;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.text-reader {
+  width: min(1000px, 100%);
+  margin: 0.4rem auto 0;
+  padding: 1rem;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: rgba(255, 253, 245, 0.92);
+  box-shadow: 0 8px 18px rgba(63, 45, 19, 0.06);
+}
+
+.text-reader[hidden] {
+  display: none;
+}
+
+.text-reader-heading {
+  display: flex;
+  align-items: end;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.text-reader h2 {
+  font-size: clamp(1.3rem, 2.8vw, 1.8rem);
+}
+
+.text-search {
+  display: flex;
+  gap: 0.38rem;
+}
+
+.text-search input {
+  width: min(260px, 50vw);
+  min-height: 34px;
+  padding: 0.42rem 0.58rem;
+}
+
+.text-help {
+  margin: 0.5rem 0 0.7rem;
+  color: var(--muted);
+  font-size: 0.82rem;
+}
+
+.page-text-content {
+  max-height: 420px;
+  overflow: auto;
+  padding: 1rem;
+  border: 1px solid rgba(91, 64, 32, 0.16);
+  border-radius: 8px;
+  background: #fffdf6;
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: var(--text-size);
+  line-height: 1.7;
+  white-space: pre-wrap;
+}
+
+.page-text-content .word {
+  border-radius: 2px;
+}
+
+.page-text-content mark {
+  background: #f6d86d;
+  color: #1d160d;
+}
+
+.reading-ruler {
+  position: fixed;
+  left: 0;
+  right: 0;
+  top: 45%;
+  z-index: 90;
+  display: none;
+  height: 24px;
+  pointer-events: none;
+  border-top: 1px solid rgba(180, 128, 20, 0.72);
+  border-bottom: 1px solid rgba(180, 128, 20, 0.72);
+  background: rgba(255, 225, 97, 0.14);
+}
+
+body.ruler-enabled .reading-ruler {
+  display: block;
+}
+
+body.high-contrast {
+  --page: #101010;
+  --paper: #fff;
+  --ink: #fff;
+  --muted: #eee;
+  --line: rgba(255, 255, 255, 0.62);
+  --toolbar: #171717;
+}
+
+body.high-contrast button,
+body.high-contrast select,
+body.high-contrast input,
+body.high-contrast .text-reader,
+body.high-contrast .page-text-content {
+  border-color: #fff;
+  background: #050505;
+  color: #fff;
+}
+
+body.high-contrast .page-arrow {
+  border: 0;
+  background: transparent;
+  color: #fff;
+}
+
+body.high-contrast .page-arrow:hover,
+body.high-contrast .page-arrow:focus-visible {
+  color: #ffda62;
+}
+
+body.high-contrast .page-text-content mark {
+  background: #ffec4b;
+  color: #000;
+}
+
+@media (max-width: 760px) {
+  .back-link {
+    position: static;
+    display: inline-block;
+    margin: 0.7rem 0 0 0.8rem;
+  }
+
+  .reader-page {
+    padding-top: 0.2rem;
+    padding-inline: 0.42rem;
+  }
+
+  .reader-header {
+    padding: 0 2.2rem 0.55rem;
+  }
+
+  .reader-logo {
+    width: 40px;
+    max-height: 52px;
+  }
+
+  .reader-toolbar {
+    justify-content: flex-start;
+    border-radius: 7px;
+  }
+
+  .book-select {
+    width: 188px;
+  }
+
+  .part-select {
+    width: 158px;
+  }
+
+  .page-navigation {
+    grid-template-columns: 58px minmax(0, 1fr) 58px;
+  }
+
+  .page-arrow {
+    width: 52px;
+    font-size: 2.65rem;
+  }
+
+  .text-reader-heading {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .text-search input {
+    flex: 1;
+    width: auto;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+
+  button,
+  .back-link {
+    transition: none;
+  }
+}
+
+/* Compact reader controls and viewport-fitted single-page display */
+.reader-page {
+  padding-top: 0.45rem;
+  padding-bottom: 0.35rem;
+}
+
+.reader-header {
+  padding-top: 0;
+  padding-bottom: 0.38rem;
+}
+
+.reader-logo {
+  width: clamp(34px, 3.8vw, 48px);
+  max-height: 55px;
+  margin-bottom: 0.12rem;
+}
+
+.reader-header h1 {
+  font-size: clamp(1.45rem, 2.8vw, 2.15rem);
+  line-height: 1.05;
+}
+
+.reader-toolbar {
+  gap: 0.18rem;
+  min-height: 36px;
+  padding: 0.18rem 0.24rem;
+  border-radius: 6px;
+}
+
+.reader-toolbar select {
+  height: 28px;
+  min-height: 28px;
+  padding-top: 0;
+  padding-bottom: 0;
+  font-size: 0.78rem;
+}
+
+.book-select {
+  width: clamp(145px, 18vw, 210px);
+}
+
+.part-select {
+  width: clamp(120px, 15vw, 180px);
+}
+
+.reader-toolbar .icon-tool {
+  display: inline-grid;
+  flex: 0 0 29px;
+  place-items: center;
+  width: 29px;
+  height: 28px;
+  min-height: 28px;
+  padding: 0;
+  border-radius: 5px;
+  line-height: 1;
+}
+
+.reader-toolbar .icon-tool svg {
+  width: 17px;
+  height: 17px;
+  overflow: visible;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.8;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.reader-toolbar .icon-tool svg .icon-fill,
+.reader-toolbar .icon-tool .icon-fill {
+  fill: currentColor;
+  stroke: none;
+}
+
+.reader-toolbar .text-size-tool {
+  width: 32px;
+  flex-basis: 32px;
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 0.78rem;
+  font-weight: 700;
+}
+
+.reader-toolbar .icon-tool.is-active,
+.reader-toolbar .icon-tool[aria-pressed="true"] {
+  border-color: var(--gold);
+  background: #fff6d8;
+  color: #7a5610;
+}
+
+.toolbar-divider {
+  margin-inline: 0.03rem;
+}
+
+.reader-status {
+  min-height: 0.8rem;
+  margin: 0.08rem 0;
+  font-size: 0.66rem;
+  line-height: 1.15;
+}
+
+.book-stage {
+  min-height: 0;
+  overflow: auto;
+  padding: 0.15rem 0.15rem 0.1rem;
+  align-items: center;
+  overscroll-behavior: contain;
+  scrollbar-width: thin;
+}
+
+.book-stage.is-enlarged {
+  align-items: flex-start;
+}
+
+.book-page {
+  flex: 0 0 auto;
+}
+
+.page-navigation {
+  min-height: 48px;
+  padding-top: 0;
+  padding-bottom: 0.12rem;
+}
+
+.page-arrow {
+  height: 44px;
+  min-height: 44px;
+  font-size: 2.9rem;
+}
+
+@media (max-width: 760px) {
+  .reader-page {
+    padding-bottom: 0.2rem;
+  }
+
+  .reader-header {
+    padding-bottom: 0.35rem;
+  }
+
+  .reader-toolbar {
+    min-height: 34px;
+  }
+
+  .book-select {
+    width: 154px;
+  }
+
+  .part-select {
+    width: 132px;
+  }
+
+  .reader-toolbar .icon-tool {
+    flex-basis: 28px;
+    width: 28px;
+    height: 27px;
+    min-height: 27px;
+  }
+}
+
+
+/* Final requested reader tidy-up */
+.reader-header > .eyebrow {
+  display: none;
+}
+
+.reader-toolbar {
+  width: fit-content;
+  max-width: calc(100% - 1rem);
+  margin: 0 auto;
+  justify-content: center;
+}
+
+.reader-status {
+  min-height: 0;
+  margin: 0;
+  padding: 0;
+}
+
+.reader-status:empty {
+  display: none;
+}
+
+
+.part-select {
+  width: clamp(112px, 12vw, 145px);
+}
+
+.book-select {
+  width: clamp(150px, 18vw, 220px);
+}
+
+@media (max-width: 760px) {
+  .reader-toolbar {
+    justify-content: flex-start;
+    max-width: 100%;
+  }
+}
+
+/* No internal PDF scroll box, keep the border directly on the PDF page */
+.book-stage {
+  overflow: visible !important;
+  scrollbar-width: none;
+}
+
+.book-stage::-webkit-scrollbar {
+  display: none;
+}
+
+.book-stage.is-enlarged {
+  overflow: auto !important;
+  scrollbar-width: thin;
+}
+
+.book-stage.is-enlarged::-webkit-scrollbar {
+  display: initial;
+}
+
+.book-page {
+  border: 1px solid rgba(80, 56, 29, 0.22);
+  outline: 3px solid #946D31;
+  outline-offset: 0;
+}
+
+/* Small gap between toolbar and the PDF page border */
+.book-stage {
+  padding-top: 0.65rem !important;
+}
+
+@media (max-width: 760px) {
+  .book-stage {
+    padding-top: 0.55rem !important;
+  }
+}
+
+body.app-bible-page .back-link {
+  top: 14px;
+  left: 16px;
+  padding: 10px 14px;
+  border: 1px solid rgba(126, 92, 50, .12);
+  border-radius: 999px;
+  background: rgba(255, 252, 246, .92);
+  box-shadow: 0 10px 18px rgba(44, 32, 23, .05);
+}
+
+body.app-bible-page .back-link:hover,
+body.app-bible-page .back-link:focus-visible {
+  background: rgba(255, 248, 234, .98);
+}

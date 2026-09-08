@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="description" content="Read traditional Orthodox prayers for morning, evening, meals, work, travel and preparation for Holy Communion in the Daily Orthodox Life prayer library." />
+  <meta name="theme-color" content="#211812" />
+  <title>Orthodox Prayers | Daily Orthodox Life</title>
+  <link rel="icon" type="image/png" sizes="192x192" href="assets/orthodox-cover-logo.png" />
+  <link rel="manifest" href="manifest.webmanifest" />
+  <link rel="apple-touch-icon" sizes="192x192" href="assets/orthodox-cover-logo.png" />
+  <meta name="apple-mobile-web-app-title" content="Daily Orthodox Life" />
+  <meta name="msapplication-TileImage" content="assets/orthodox-cover-logo.png" />
+  <link rel="stylesheet" href="assets/css/app.css" />
+
+  <link rel="canonical" href="https://dailyorthodoxlife.com/prayers.html" />
+  <meta name="robots" content="index,follow,max-image-preview:large,max-snippet:-1,max-video-preview:-1" />
+  <meta name="application-name" content="Daily Orthodox Life" />
+  <meta property="og:site_name" content="Daily Orthodox Life" />
+  <meta property="og:locale" content="en_GB" />
+  <meta property="og:type" content="website" />
+  <meta property="og:title" content="Orthodox Prayers | Daily Orthodox Life" />
+  <meta property="og:description" content="Read traditional Orthodox prayers for morning, evening, meals, work, travel and preparation for Holy Communion in the Daily Orthodox Life prayer library." />
+  <meta property="og:url" content="https://dailyorthodoxlife.com/prayers.html" />
+  <meta property="og:image" content="https://dailyorthodoxlife.com/assets/media/home/Prayers.jpg" />
+  <meta property="og:image:alt" content="Orthodox church interior during prayer" />
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="Orthodox Prayers | Daily Orthodox Life" />
+  <meta name="twitter:description" content="Read traditional Orthodox prayers for morning, evening, meals, work, travel and preparation for Holy Communion in the Daily Orthodox Life prayer library." />
+  <meta name="twitter:image" content="https://dailyorthodoxlife.com/assets/media/home/Prayers.jpg" />
+  <meta name="twitter:image:alt" content="Orthodox church interior during prayer" />
+  <script type="application/ld+json" data-seo-schema>{"@context":"https://schema.org","@graph":[{"@type":"CollectionPage","@id":"https://dailyorthodoxlife.com/prayers.html#page","url":"https://dailyorthodoxlife.com/prayers.html","name":"Orthodox Prayers | Daily Orthodox Life","description":"Read traditional Orthodox prayers for morning, evening, meals, work, travel and preparation for Holy Communion in the Daily Orthodox Life prayer library.","isPartOf":{"@id":"https://dailyorthodoxlife.com/#website"},"about":{"@type":"Thing","name":"Orthodox prayer"},"mainEntity":{"@type":"ItemList","itemListElement":[{"@type":"ListItem","position":1,"name":"Morning Prayers"},{"@type":"ListItem","position":2,"name":"Evening Prayers"},{"@type":"ListItem","position":3,"name":"Table Prayers"},{"@type":"ListItem","position":4,"name":"Prayers Before Work and Travel"},{"@type":"ListItem","position":5,"name":"Prayers in Preparation for Holy Communion"}]},"breadcrumb":{"@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Home","item":"https://dailyorthodoxlife.com/"},{"@type":"ListItem","position":2,"name":"Orthodox Prayers","item":"https://dailyorthodoxlife.com/prayers.html"}]}}]}</script>
+</head>
+<body class="orthodox-app" data-root="">
+  <main class="oa-page">
+    <header class="oa-topbar">
+      <a class="oa-brand" href="index.html"><img src="assets/orthodox-cover-logo.png" alt="" /><span class="oa-brand-copy"><strong>Daily Orthodox Life</strong><span>Prayer library</span></span></a>
+    </header>
+
+    <section class="oa-simple-hero prayer-intro">
+      <div><p class="oa-eyebrow">Prayer library</p><h1>Daily prayers</h1><p>Traditional Orthodox prayers for the morning, evening and daily life. Open any prayer to read it in a clean reading view.</p></div>
+    </section>
+
+    <div class="oa-search-wrap">
+      <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m20 20-4-4"/></svg>
+      <input id="prayer-search" class="oa-search" type="search" placeholder="Search prayers" autocomplete="off" />
+    </div>
+    <div id="prayer-filters" class="oa-chip-row" aria-label="Prayer categories"></div>
+    <section id="prayer-grid" class="oa-prayer-grid" aria-live="polite"></section>
+  </main>
+
+  <div id="prayer-modal" class="oa-modal" aria-hidden="true" role="dialog" aria-modal="true" aria-labelledby="prayer-modal-title">
+    <article class="oa-modal-panel">
+      <header class="oa-modal-head">
+        <div><p id="prayer-modal-category" class="oa-eyebrow"></p><h2 id="prayer-modal-title"></h2></div>
+        <button id="prayer-modal-close" class="oa-close" aria-label="Close">×</button>
+      </header>
+      <div id="prayer-modal-text" class="oa-modal-text"></div>
+    </article>
+  </div>
+
+
+
+  <nav data-app-nav data-active="pray" data-root=""></nav>
+  <script src="assets/js/prayer-data.js"></script>
+  <script src="assets/js/app-shell.js"></script>
+  <script src="assets/js/prayers.js"></script>
+</body>
+</html>

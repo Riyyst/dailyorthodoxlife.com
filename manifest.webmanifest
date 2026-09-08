@@ -1,0 +1,24 @@
+{
+  "id": "./",
+  "name": "Daily Orthodox Life",
+  "short_name": "Daily Orthodox Life",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#f7f4ee",
+  "theme_color": "#2a1d15",
+  "description": "Daily Orthodox Life brings together Orthodox calendars, the Orthodox Study Bible, daily prayers, sacred chants and teaching.",
+  "icons": [
+    {
+      "src": "assets/orthodox-cover-logo.png",
+      "sizes": "any",
+      "type": "image/png",
+      "purpose": "any"
+    }
+  ],
+  "categories": [
+    "lifestyle",
+    "books",
+    "music"
+  ]
+}

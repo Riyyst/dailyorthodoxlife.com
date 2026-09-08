@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Russian Orthodox Calendar Today | Daily Orthodox Life</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="description" content="View today&#x27;s Russian Orthodox calendar with saints, commemorations, feasts, fasting guidance and Scripture readings, with Old and New Calendar options." />
+  <link rel="stylesheet" href="russian-assets/css/style.css" />
+  <link rel="stylesheet" href="../assets/css/app.css" />
+  <link rel="manifest" href="../manifest.webmanifest" />
+  <link rel="apple-touch-icon" sizes="192x192" href="../assets/orthodox-cover-logo.png" />
+  <meta name="apple-mobile-web-app-title" content="Daily Orthodox Life" />
+  <meta name="msapplication-TileImage" content="../assets/orthodox-cover-logo.png" />
+  <meta name="theme-color" content="#2a1d15" />
+  <link rel="icon" type="image/png" sizes="192x192" href="../assets/orthodox-cover-logo.png" />
+
+  <link rel="canonical" href="https://dailyorthodoxlife.com/russian/" />
+  <meta name="robots" content="index,follow,max-image-preview:large,max-snippet:-1,max-video-preview:-1" />
+  <meta name="application-name" content="Daily Orthodox Life" />
+  <meta property="og:site_name" content="Daily Orthodox Life" />
+  <meta property="og:locale" content="en_GB" />
+  <meta property="og:type" content="website" />
+  <meta property="og:title" content="Russian Orthodox Calendar Today | Daily Orthodox Life" />
+  <meta property="og:description" content="View today&#x27;s Russian Orthodox calendar with saints, commemorations, feasts, fasting guidance and Scripture readings, with Old and New Calendar options." />
+  <meta property="og:url" content="https://dailyorthodoxlife.com/russian/" />
+  <meta property="og:image" content="https://dailyorthodoxlife.com/russian/russian-assets/images/church-background.png" />
+  <meta property="og:image:alt" content="Russian Orthodox church interior" />
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="Russian Orthodox Calendar Today | Daily Orthodox Life" />
+  <meta name="twitter:description" content="View today&#x27;s Russian Orthodox calendar with saints, commemorations, feasts, fasting guidance and Scripture readings, with Old and New Calendar options." />
+  <meta name="twitter:image" content="https://dailyorthodoxlife.com/russian/russian-assets/images/church-background.png" />
+  <meta name="twitter:image:alt" content="Russian Orthodox church interior" />
+  <script type="application/ld+json" data-seo-schema>{"@context":"https://schema.org","@graph":[{"@type":"WebPage","@id":"https://dailyorthodoxlife.com/russian/#page","url":"https://dailyorthodoxlife.com/russian/","name":"Russian Orthodox Calendar Today | Daily Orthodox Life","description":"View today's Russian Orthodox calendar with saints, commemorations, feasts, fasting guidance and Scripture readings, with Old and New Calendar options.","isPartOf":{"@id":"https://dailyorthodoxlife.com/#website"},"about":{"@type":"Thing","name":"Russian Orthodox Calendar"},"breadcrumb":{"@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Home","item":"https://dailyorthodoxlife.com/"},{"@type":"ListItem","position":2,"name":"Orthodox Calendar","item":"https://dailyorthodoxlife.com/calendar.html"},{"@type":"ListItem","position":3,"name":"Russian Orthodox Calendar","item":"https://dailyorthodoxlife.com/russian/"}]}}]}</script>
+</head>
+<body class="app-page app-calendar-page" data-root="../">
+  <div class="app-shell">
+    <header class="app-header liturgical-masthead">
+      <div class="liturgical-watermark" aria-hidden="true"><img src="russian-assets/images/Orthodox-Cross.png" alt="" /></div>
+
+      <div class="liturgical-heading">
+        <div class="liturgical-crest">
+          <img src="russian-assets/images/Orthodox-Cross.png" class="app-logo" alt="Orthodox Cross">
+        </div>
+        <div class="app-tagline">RUSSIAN ORTHODOX CALENDAR</div>
+        <h1 class="app-title">Today in the Church</h1>
+        <p class="app-subtitle">Feasts, saints, fasting rules and scripture readings.</p>
+        <div class="liturgical-ornament" aria-hidden="true"><span></span><b>☦</b><span></span></div>
+      </div>
+
+      <div class="liturgical-control-band">
+        <div class="liturgical-date-block">
+          <span class="liturgical-control-label">Today</span>
+          <div class="header-meta"><div class="meta-date"><span id="civil-date">—</span></div></div>
+        </div>
+
+        <div class="calendar-toggle-frame">
+          <span class="liturgical-control-label">Calendar</span>
+          <div class="calendar-toggle-group" aria-label="Calendar style">
+            <button type="button" id="toggle-julian" class="calendar-toggle-btn active"><span>Old Calendar</span><small>Julian</small></button>
+            <button type="button" id="toggle-gregorian" class="calendar-toggle-btn"><span>New Calendar</span><small>Gregorian</small></button>
+          </div>
+        </div>
+
+        <div class="hymn-player liturgical-audio">
+          <span class="liturgical-control-label">Sacred sound</span>
+          <button type="button" id="hymn-random-btn" class="hymn-main-btn">
+            <span class="hymn-main-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M8 5v11.5a2.5 2.5 0 1 1-1.5-2.3V7l10-2v9.5a2.5 2.5 0 1 1-1.5-2.3V5.4z"/></svg></span>
+            <span class="hymn-main-copy"><strong>Sacred chants</strong><small>Begin a random chant</small></span>
+            <span class="hymn-main-arrow" aria-hidden="true">▶</span>
+          </button>
+          <div id="hymn-controls" class="hymn-controls">
+            <button type="button" id="hymn-prev" class="hymn-secondary-btn hymn-skip-btn" aria-label="Previous chant">⏮</button>
+            <button type="button" id="hymn-play-pause" class="hymn-secondary-btn hymn-play-btn" aria-label="Play or pause chant">▶</button>
+            <button type="button" id="hymn-next" class="hymn-secondary-btn hymn-skip-btn" aria-label="Next chant">⏭</button>
+            <button type="button" id="hymn-loop" class="hymn-secondary-btn hymn-loop-btn" aria-label="Loop current chant">↻</button>
+            <label class="hymn-volume"><span>Volume</span><input type="range" id="hymn-volume" min="0" max="1" step="0.01" value="0.2" /></label>
+          </div>
+          <audio id="hymn-audio"></audio>
+          <p id="hymn-now-playing" class="hymn-now-playing" style="display:none;"></p>
+        </div>
+      </div>
+    </header>
+
+    <main class="app-main">
+      <!-- LEFT: Today details -->
+      <section class="today-panel">
+        <header class="today-header">
+          <div class="today-label-row">
+            
+            <div class="liturgical-date-line">
+              <span id="calendar-date-label" class="today-label-date today-label-prefix">—</span>
+              <span id="liturgical-date" class="today-label-date">—</span>
+            </div>
+          </div>
+        </header>
+
+        <section class="today-saints today-section">
+          <h3 class="section-heading">Commemorations</h3>
+          <ul id="saints-list" class="list saints-list"></ul>
+        </section>
+
+        <section class="today-fast today-section">
+          <h3 class="section-heading">Fasting</h3>
+          <ul id="fast-list" class="list fast-list"></ul>
+        </section>
+
+        <section class="today-feasts today-section">
+          <h3 class="section-heading">Feasts</h3>
+          <ul id="feast-list" class="list feasts-list"></ul>
+        </section>
+
+        <section id="service-notes" class="today-notes today-section" style="display:none;">
+          <h3 class="section-heading">Liturgical notes</h3>
+          <ul id="service-notes-list" class="list notes-list"></ul>
+        </section>
+
+        
+        <section class="today-date today-section">
+
+          <header class="panel-header panel-header-row date-header-center">
+            <div class="month-nav">
+              <button type="button" id="prev-month" aria-label="Previous month">‹</button>
+              <div id="month-label" class="chip chip-soft chip-small">—</div>
+              <button type="button" id="next-month" aria-label="Next month">›</button>
+            </div>
+          </header>
+          <table class="month-grid" aria-label="Date selector calendar">
+            <thead>
+              <tr>
+                <th>Sun</th>
+                <th>Mon</th>
+                <th>Tue</th>
+                <th>Wed</th>
+                <th>Thu</th>
+                <th>Fri</th>
+                <th>Sat</th>
+              </tr>
+            </thead>
+            <tbody id="month-grid-body"></tbody>
+          </table>
+        
+        </section>
+
+<p id="summary-error" class="error-text" style="display:none;"></p>
+      </section>
+
+      <!-- RIGHT: Readings + Date selector -->
+      <section class="right-panel">
+        <section class="readings-panel">
+          <header class="panel-header">
+            <h3>Scripture readings</h3>
+            <p class="panel-sub">
+              References are provided with the passage text.
+            </p>
+          </header>
+          <div id="readings-list" class="readings-list"></div>
+          <p id="readings-empty" class="muted" style="display:none;">
+            No specific readings are listed for this day.
+          </p>
+        </section>
+        <section class="prayers-panel calendar-prayer-gateway">
+          <header class="panel-header">
+            <h3>Daily Prayers</h3>
+            <p class="panel-sub">Prayer rules are kept in the Prayer tab, so the calendar stays focused on the day itself.</p>
+          </header>
+          <nav class="calendar-prayer-links" aria-label="Open prayer sections">
+            <a href="../prayers.html?category=Morning%20Prayers"><span>Morning Prayers</span></a>
+            <a href="../prayers.html?category=Evening%20Prayers"><span>Evening Prayers</span></a>
+            <a href="../prayers.html?category=Table%20Prayers"><span>Table Prayers</span></a>
+            <a href="../prayers.html?category=Prayers%20Before%20Work%20and%20Travel"><span>Before Work and Travel</span></a>
+            <a href="../prayers.html?category=Prayers%20in%20Preparation%20for%20Holy%20Communion"><span>Preparation for Holy Communion</span></a>
+            <a class="calendar-prayer-all" href="../prayers.html"><span>All prayers</span></a>
+          </nav>
+        </section>
+
+
+        
+      </section>
+    </main>
+  </div>
+
+  <nav data-app-nav data-active="calendar" data-root="../"></nav>
+  <script src="russian-assets/js/main.js"></script>
+  <script src="../assets/js/app-shell.js"></script>
+</body>
+</html>

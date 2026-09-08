@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="description" content="Listen to Greek and Russian Orthodox chants, with a growing library for recorded Orthodox prayers and teaching on Daily Orthodox Life." />
+  <meta name="theme-color" content="#211812" />
+  <title>Orthodox Chants | Greek &amp; Russian | Daily Orthodox Life</title>
+  <link rel="icon" type="image/png" sizes="192x192" href="assets/orthodox-cover-logo.png" />
+  <link rel="manifest" href="manifest.webmanifest" />
+  <link rel="apple-touch-icon" sizes="192x192" href="assets/orthodox-cover-logo.png" />
+  <meta name="apple-mobile-web-app-title" content="Daily Orthodox Life" />
+  <meta name="msapplication-TileImage" content="assets/orthodox-cover-logo.png" />
+  <link rel="stylesheet" href="assets/css/app.css" />
+
+  <link rel="canonical" href="https://dailyorthodoxlife.com/listen.html" />
+  <meta name="robots" content="index,follow,max-image-preview:large,max-snippet:-1,max-video-preview:-1" />
+  <meta name="application-name" content="Daily Orthodox Life" />
+  <meta property="og:site_name" content="Daily Orthodox Life" />
+  <meta property="og:locale" content="en_GB" />
+  <meta property="og:type" content="website" />
+  <meta property="og:title" content="Orthodox Chants | Greek &amp; Russian | Daily Orthodox Life" />
+  <meta property="og:description" content="Listen to Greek and Russian Orthodox chants, with a growing library for recorded Orthodox prayers and teaching on Daily Orthodox Life." />
+  <meta property="og:url" content="https://dailyorthodoxlife.com/listen.html" />
+  <meta property="og:image" content="https://dailyorthodoxlife.com/assets/media/home/candles.jpg" />
+  <meta property="og:image:alt" content="Candles burning inside an Orthodox church" />
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="Orthodox Chants | Greek &amp; Russian | Daily Orthodox Life" />
+  <meta name="twitter:description" content="Listen to Greek and Russian Orthodox chants, with a growing library for recorded Orthodox prayers and teaching on Daily Orthodox Life." />
+  <meta name="twitter:image" content="https://dailyorthodoxlife.com/assets/media/home/candles.jpg" />
+  <meta name="twitter:image:alt" content="Candles burning inside an Orthodox church" />
+  <script type="application/ld+json" data-seo-schema>{"@context":"https://schema.org","@graph":[{"@type":"CollectionPage","@id":"https://dailyorthodoxlife.com/listen.html#page","url":"https://dailyorthodoxlife.com/listen.html","name":"Orthodox Chants | Greek & Russian | Daily Orthodox Life","description":"Listen to Greek and Russian Orthodox chants, with a growing library for recorded Orthodox prayers and teaching on Daily Orthodox Life.","isPartOf":{"@id":"https://dailyorthodoxlife.com/#website"},"about":{"@type":"Thing","name":"Orthodox chant"},"mainEntity":{"@type":"ItemList","itemListElement":[{"@type":"ListItem","position":1,"name":"Agni Parthene","description":"Greek Orthodox chant"},{"@type":"ListItem","position":2,"name":"Come on people","description":"Greek Orthodox chant"},{"@type":"ListItem","position":3,"name":"Praise the Lord from the Heavens","description":"Greek Orthodox chant"},{"@type":"ListItem","position":4,"name":"Psalm 135","description":"Greek Orthodox chant"},{"@type":"ListItem","position":5,"name":"Psalm 50","description":"Greek Orthodox chant"},{"@type":"ListItem","position":6,"name":"Belisarius","description":"Russian Orthodox chant"},{"@type":"ListItem","position":7,"name":"Hymn of the Cherubim","description":"Russian Orthodox chant"},{"@type":"ListItem","position":8,"name":"Lord, I have cried unto Thee","description":"Russian Orthodox chant"},{"@type":"ListItem","position":9,"name":"My Sinful Soul","description":"Russian Orthodox chant"},{"@type":"ListItem","position":10,"name":"We Praise Thee","description":"Russian Orthodox chant"}]},"breadcrumb":{"@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Home","item":"https://dailyorthodoxlife.com/"},{"@type":"ListItem","position":2,"name":"Orthodox Chants","item":"https://dailyorthodoxlife.com/listen.html"}]}}]}</script>
+</head>
+<body class="orthodox-app" data-root="">
+  <main class="oa-page oa-listen-page">
+    <header class="oa-topbar">
+      <a class="oa-brand" href="index.html"><img src="assets/orthodox-cover-logo.png" alt="" /><span class="oa-brand-copy"><strong>Daily Orthodox Life</strong><span>Listen</span></span></a>
+    </header>
+
+    <section class="oa-audio-hero oa-audio-hero-refined">
+      <div class="oa-audio-hero-art"><img src="assets/media/home/candles.jpg" alt="Candles in an Orthodox church" /></div>
+      <div class="oa-audio-hero-copy">
+        <p class="oa-eyebrow">Sacred audio</p>
+        <h1>Listen</h1>
+        <p>Chants, recorded prayers and teaching each have their own place, so the listening library feels ordered and calm.</p>
+        <div class="oa-hero-actions"><button id="play-featured" class="oa-primary" type="button"><svg viewBox="0 0 24 24"><path d="m9 7 8 5-8 5z"/></svg> Play a random chant</button></div>
+      </div>
+    </section>
+
+    <div class="oa-listen-tabs oa-listen-tabs-wide" role="tablist" aria-label="Audio library">
+      <button class="oa-listen-tab is-active" type="button" role="tab" aria-selected="true" data-audio-tab="chants">Chants</button>
+      <button class="oa-listen-tab" type="button" role="tab" aria-selected="false" data-audio-tab="spoken">Prayers &amp; teaching</button>
+    </div>
+
+    <section data-audio-panel="chants" role="tabpanel">
+      <div class="oa-section-head"><div><p class="oa-eyebrow">Chants</p><h2 class="oa-section-title">Sacred chants</h2></div></div>
+      <section id="track-list" class="oa-track-list oa-track-list-organised"></section>
+    </section>
+
+    <section data-audio-panel="spoken" role="tabpanel" hidden>
+      <div class="oa-section-head"><div><p class="oa-eyebrow">Recorded audio</p><h2 class="oa-section-title">Prayers &amp; teaching</h2></div></div>
+      <div class="oa-recorded-empty oa-recorded-empty-refined">
+        <div class="oa-recorded-empty-mark"><svg viewBox="0 0 24 24"><path d="M5 10v4M9 7v10M13 4v16M17 8v8M21 10v4"/></svg></div>
+        <div>
+          <h3>Space prepared for future recordings</h3>
+          <p>Recorded prayers and teaching will appear here as their own library, separate from written prayers and separate from chants.</p>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <audio id="audio" preload="metadata"></audio>
+  <div id="audio-player" class="oa-player">
+    <div class="oa-player-meta"><strong id="audio-player-title">Sacred audio</strong><span id="audio-player-meta">Select a recording</span></div>
+
+    <div class="oa-player-controls">
+      <button id="audio-player-prev" class="oa-player-btn" type="button" aria-label="Previous"><svg viewBox="0 0 24 24"><path d="M6 5v14M18 6l-8 6 8 6z"/></svg></button>
+      <button id="audio-player-play" class="oa-player-btn play" type="button" aria-label="Play or pause"><svg viewBox="0 0 24 24"><path d="m9 7 8 5-8 5z"/></svg></button>
+      <button id="audio-player-next" class="oa-player-btn" type="button" aria-label="Next"><svg viewBox="0 0 24 24"><path d="M18 5v14M6 6l8 6-8 6z"/></svg></button>
+    </div>
+
+    <div class="oa-player-tools">
+      <div class="oa-player-volume" aria-label="Volume controls">
+        <button id="audio-volume-down" class="oa-volume-step" type="button" aria-label="Lower volume">−</button>
+        <input id="audio-volume" type="range" min="0" max="1" step="0.05" value="1" aria-label="Volume" />
+        <button id="audio-volume-up" class="oa-volume-step" type="button" aria-label="Raise volume">+</button>
+      </div>
+
+      <button id="audio-sleep-timer" class="oa-player-timer" type="button" aria-label="Set sleep timer" aria-expanded="false">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 2h6M12 5v2M17.5 6.5l1.5-1.5M12 7a7 7 0 1 1-7 7 7 7 0 0 1 7-7z"/><path d="M12 10v4l2.5 1.5"/></svg>
+        <span id="audio-sleep-timer-badge" aria-hidden="true"></span>
+      </button>
+
+      <button id="audio-player-close" class="oa-player-close" type="button" aria-label="Close audio player">×</button>
+
+      <div id="audio-sleep-panel" class="oa-sleep-panel" hidden>
+        <strong>Sleep timer</strong>
+        <span class="oa-sleep-note">Fade out and stop after:</span>
+        <div class="oa-sleep-presets" role="group" aria-label="Sleep timer presets">
+          <button type="button" data-sleep-minutes="15">15 min</button>
+          <button type="button" data-sleep-minutes="30">30 min</button>
+          <button type="button" data-sleep-minutes="45">45 min</button>
+          <button type="button" data-sleep-minutes="60">1 hour</button>
+          <button type="button" data-sleep-minutes="90">90 min</button>
+        </div>
+        <div class="oa-sleep-custom">
+          <label for="audio-sleep-custom">Custom</label>
+          <input id="audio-sleep-custom" type="number" min="1" max="480" inputmode="numeric" placeholder="Minutes" />
+          <button id="audio-sleep-custom-set" type="button">Set</button>
+        </div>
+        <button id="audio-sleep-cancel" class="oa-sleep-cancel" type="button" hidden>Cancel timer</button>
+      </div>
+    </div>
+
+    <div class="oa-player-progress"><span id="audio-current">0:00</span><input id="audio-scrub" type="range" min="0" max="100" value="0" aria-label="Playback position" /><span id="audio-duration">0:00</span></div>
+  </div>
+
+  <nav data-app-nav data-active="listen" data-root=""></nav>
+  <script src="assets/js/app-shell.js"></script>
+  <script src="assets/js/listen.js"></script>
+</body>
+</html>

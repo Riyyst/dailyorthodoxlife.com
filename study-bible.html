@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="description" content="Read The Orthodox Study Bible online with book and chapter navigation, page controls, accessible text tools and a focused single-page reader." />
+  <title>Orthodox Study Bible | Read Online | Daily Orthodox Life</title>
+  <link rel="icon" type="image/png" sizes="192x192" href="assets/orthodox-cover-logo.png" />
+  <link rel="stylesheet" href="assets/css/reader.css" />
+  <link rel="stylesheet" href="assets/css/app.css" />
+  <link rel="manifest" href="manifest.webmanifest" />
+  <link rel="apple-touch-icon" sizes="192x192" href="assets/orthodox-cover-logo.png" />
+  <meta name="apple-mobile-web-app-title" content="Daily Orthodox Life" />
+  <meta name="msapplication-TileImage" content="assets/orthodox-cover-logo.png" />
+  <meta name="theme-color" content="#211812" />
+
+  <link rel="canonical" href="https://dailyorthodoxlife.com/study-bible.html" />
+  <meta name="robots" content="index,follow,max-image-preview:large,max-snippet:-1,max-video-preview:-1" />
+  <meta name="application-name" content="Daily Orthodox Life" />
+  <meta property="og:site_name" content="Daily Orthodox Life" />
+  <meta property="og:locale" content="en_GB" />
+  <meta property="og:type" content="website" />
+  <meta property="og:title" content="Orthodox Study Bible | Read Online | Daily Orthodox Life" />
+  <meta property="og:description" content="Read The Orthodox Study Bible online with book and chapter navigation, page controls, accessible text tools and a focused single-page reader." />
+  <meta property="og:url" content="https://dailyorthodoxlife.com/study-bible.html" />
+  <meta property="og:image" content="https://dailyorthodoxlife.com/assets/media/home/Bible.png" />
+  <meta property="og:image:alt" content="The Orthodox Study Bible" />
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="Orthodox Study Bible | Read Online | Daily Orthodox Life" />
+  <meta name="twitter:description" content="Read The Orthodox Study Bible online with book and chapter navigation, page controls, accessible text tools and a focused single-page reader." />
+  <meta name="twitter:image" content="https://dailyorthodoxlife.com/assets/media/home/Bible.png" />
+  <meta name="twitter:image:alt" content="The Orthodox Study Bible" />
+  <script type="application/ld+json" data-seo-schema>{"@context":"https://schema.org","@graph":[{"@type":"WebPage","@id":"https://dailyorthodoxlife.com/study-bible.html#page","url":"https://dailyorthodoxlife.com/study-bible.html","name":"Orthodox Study Bible | Read Online | Daily Orthodox Life","description":"Read The Orthodox Study Bible online with book and chapter navigation, page controls, accessible text tools and a focused single-page reader.","isPartOf":{"@id":"https://dailyorthodoxlife.com/#website"},"mainEntity":{"@type":"Book","name":"The Orthodox Study Bible"},"breadcrumb":{"@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Home","item":"https://dailyorthodoxlife.com/"},{"@type":"ListItem","position":2,"name":"Orthodox Study Bible","item":"https://dailyorthodoxlife.com/study-bible.html"}]}}]}</script>
+</head>
+<body class="app-page app-bible-page" data-root="">
+  <main class="reader-page" id="book-reader">
+    <header class="bible-editorial-head">
+      <div class="bible-editorial-mark" aria-hidden="true">☦</div>
+      <div class="bible-editorial-copy">
+        <p class="bible-kicker">The Orthodox Study Bible</p>
+        <h1>Scripture &amp; Study</h1>
+        <p>Read the study edition page by page, with the book, chapter and reading tools kept close without crowding the text.</p>
+      </div>
+      <span class="bible-editorial-rule" aria-hidden="true"></span>
+    </header>
+
+    <section class="reader-toolbar" aria-label="Book navigation and reading tools">
+      <div class="reader-select-group">
+        <label class="visually-hidden" for="book-select">Book or section</label>
+        <select id="book-select" class="book-select" aria-label="Choose a book or section"></select>
+
+        <label class="visually-hidden" for="part-select">Chapters</label>
+        <select id="part-select" class="part-select" aria-label="Choose a chapter"></select>
+      </div>
+
+      <div class="reader-tool-group">
+        <button type="button" id="text-smaller-btn" class="icon-tool text-size-tool" aria-label="Make the page smaller" title="Make page smaller">A−</button>
+        <button type="button" id="text-larger-btn" class="icon-tool text-size-tool" aria-label="Make the page larger" title="Make page larger">A+</button>
+        <button type="button" id="contrast-btn" class="icon-tool" aria-label="Toggle high contrast" aria-pressed="false" title="High contrast">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8"/><path class="icon-fill" d="M12 4a8 8 0 0 0 0 16V4Z"/></svg>
+        </button>
+        <button type="button" id="ruler-btn" class="icon-tool" aria-label="Toggle reading ruler" aria-pressed="false" title="Reading ruler">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 8h16v8H4zM8 8v4M12 8v3M16 8v4"/></svg>
+        </button>
+        <button type="button" id="text-panel-btn" class="icon-tool" aria-label="Show accessible page text" aria-expanded="false" aria-controls="text-reader" title="Accessible text view">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 3h9l3 3v15H6zM9 10h6M9 14h6M9 18h4"/></svg>
+        </button>
+        <button type="button" id="fullscreen-btn" class="icon-tool" aria-label="Open the page full screen" title="Full screen">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 3H3v5M16 3h5v5M8 21H3v-5M16 21h5v-5"/></svg>
+        </button>
+      </div>
+    </section>
+
+    <p id="reader-status" class="reader-status" role="status" aria-live="polite">Loading the book…</p>
+
+    <section class="bible-reading-deck" aria-label="Move through the book">
+      <button type="button" id="previous-page-btn" class="page-arrow page-arrow-left bible-side-arrow" aria-label="Previous page" title="Previous page">←</button>
+      <section class="book-stage" id="book-stage" aria-label="The Orthodox Study Bible page">
+        <div class="book-shell">
+          <div id="book-spread" class="book-spread single-page"></div>
+        </div>
+      </section>
+      <button type="button" id="next-page-btn" class="page-arrow page-arrow-right bible-side-arrow" aria-label="Next page" title="Next page">→</button>
+    </section>
+    <div class="bible-location-line"><span id="location-label" class="location-label">Cover</span></div>
+
+    <section class="text-reader" id="text-reader" aria-labelledby="page-text-heading" hidden>
+      <div class="text-reader-heading">
+        <div>
+          <p class="eyebrow">Accessible text</p>
+          <h2 id="page-text-heading">Current page text</h2>
+        </div>
+        <div class="text-search">
+          <label class="visually-hidden" for="text-search-input">Find on current page</label>
+          <input id="text-search-input" type="search" placeholder="Find on this page" />
+          <button type="button" id="text-search-btn">Find</button>
+        </div>
+      </div>
+      <p class="text-help">Use this view to search, select and copy text from the current page.</p>
+      <article id="page-text-content" class="page-text-content" tabindex="0" aria-live="polite">Loading page text…</article>
+    </section>
+  </main>
+
+  <div id="reading-ruler" class="reading-ruler" aria-hidden="true"></div>
+  <nav data-app-nav data-active="bible" data-root=""></nav>
+
+  <script src="assets/pdfjs/pdf.min.js"></script>
+  <script src="assets/js/bible-navigation.js"></script>
+  <script src="assets/js/pdf-worker-inline.js"></script>
+  <script src="assets/js/app-shell.js"></script>
+  <script src="assets/js/reader.js"></script>
+</body>
+</html>
