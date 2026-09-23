@@ -216,141 +216,66 @@ const FAST_FOOD_CATEGORIES = ["Meat", "Dairy", "Eggs", "Fish", "Wine", "Oil"];
 
 
 
-function computeFastRules(fastLevelDesc, fastExceptionDesc) {
+function computeFastRules(fastLevelDesc, fastExceptionDesc, fastLevel, fastException) {
   const combined = ((fastLevelDesc || "") + " " + (fastExceptionDesc || "")).trim();
   const t = combined.toLowerCase();
+  const level = Number(fastLevel);
+  const exception = Number(fastException);
+  const allFoods = ["Meat", "Fish", "Dairy", "Eggs", "Wine", "Oil"];
 
-  const allFoods = ["Meat", "Dairy", "Eggs", "Fish", "Wine", "Oil"];
+  const explicitlyNoFast =
+    level === 0 || exception === 11 ||
+    t.includes("fast-free") || t.includes("fast free") ||
+    t.includes("no fast") || t.includes("no fasting");
 
-  // Completely fast-free: everything allowed, nothing forbidden
-  if (
-    !combined ||
-    t.includes("fast-free") ||
-    t.includes("fast free") ||
-    t.includes("fast free period") ||
-    t.includes("no fast") ||
-    t.includes("no fasting")
-  ) {
-    return {
-      label: combined || "No fast",
-      isNoFast: true,
-      allowed: allFoods.slice(),
-      forbidden: []
-    };
+  if (explicitlyNoFast || (!combined && !Number.isFinite(level))) {
+    return { label: combined || "No fast", isNoFast: true, allowed: allFoods.slice(), forbidden: [] };
   }
 
-  // Cheese-fare / meat-only restriction (e.g. Cheese-fare week: no meat, other animal products allowed)
-  const isCheeseFare =
-    t.includes("cheese-fare") ||
-    t.includes("cheese fare") ||
-    t.includes("cheesefare");
-
-  if (
-    isCheeseFare ||
-    (t.includes("no meat") &&
-      !t.includes("no dairy") &&
-      !t.includes("no eggs") &&
-      !t.includes("no fish") &&
-      !t.includes("no wine") &&
-      !t.includes("no oil"))
-  ) {
-    const allowed = ["Dairy", "Eggs", "Fish", "Wine", "Oil"];
-    const forbidden = ["Meat"];
-    return {
-      label: combined || "Meat fast",
-      isNoFast: false,
-      allowed,
-      forbidden
-    };
+  const isFast = (Number.isFinite(level) && level > 0) || t.includes("fast") || t.includes("lent");
+  if (!isFast) {
+    return { label: combined || "No fast", isNoFast: true, allowed: allFoods.slice(), forbidden: [] };
   }
 
-  // If the text does not even mention a fast at all, treat it as no fast
-  const mentionsFast = t.includes("fast") || t.includes("lent");
-  if (!mentionsFast) {
-    return {
-      label: combined || "No fast",
-      isNoFast: true,
-      allowed: allFoods.slice(),
-      forbidden: []
-    };
-  }
-
-  // Baseline for any fast day according to Russian typikon explanations:
-  // strict fast = no meat, eggs, dairy products, fish, wine or oil.
   const allowedSet = new Set();
   const forbiddenSet = new Set(allFoods);
+  const allow = (...foods) => foods.forEach(food => { forbiddenSet.delete(food); allowedSet.add(food); });
 
-  const textHas = (phrase) => t.includes(phrase);
-
-  // Canonical phrases used in Russian calendars:
-  const hasFishWineOil =
-    t.includes("fish, wine and oil") ||
-    t.includes("fish, wine & oil") ||
-    t.includes("fish wine and oil");
-  const hasWineOil =
-    (t.includes("wine and oil") || t.includes("wine & oil")) && !hasFishWineOil;
-
-  // Apply high-level canonical exceptions first
-  if (hasFishWineOil) {
-    ["Fish", "Wine", "Oil"].forEach((f) => {
-      forbiddenSet.delete(f);
-      allowedSet.add(f);
-    });
-  } else if (hasWineOil) {
-    ["Wine", "Oil"].forEach((f) => {
-      forbiddenSet.delete(f);
-      allowedSet.add(f);
-    });
+  // Orthocal's exception values/descriptions are the authoritative relaxation for a fast day.
+  if (exception === 7 || t.includes("meat fast") || t.includes("cheese-fare") || t.includes("cheese fare") || t.includes("cheesefare")) {
+    allow("Dairy", "Eggs", "Fish", "Wine", "Oil");
+  } else if ([2, 4].includes(exception) || t.includes("fish, wine and oil") || t.includes("fish, wine & oil") || t.includes("fish wine and oil")) {
+    allow("Fish", "Wine", "Oil");
+  } else if ([1, 3, 8].includes(exception) || t.includes("wine and oil") || t.includes("wine & oil")) {
+    allow("Wine", "Oil");
+  } else if (exception === 5 || t.includes("wine is allowed") || t.includes("wine allowed")) {
+    allow("Wine");
+  } else if (exception === 6 || t.includes("wine, oil and caviar") || t.includes("wine oil and caviar")) {
+    allow("Wine", "Oil");
   }
 
-  // Additional explicit "X allowed" phrases (if present in the API text)
-  if (textHas("fish allowed") || textHas("fish is allowed")) {
-    forbiddenSet.delete("Fish");
-    allowedSet.add("Fish");
-  }
-  if (textHas("wine allowed") || textHas("wine is allowed")) {
-    forbiddenSet.delete("Wine");
-    allowedSet.add("Wine");
-  }
-  if (textHas("oil allowed") || textHas("oil is allowed") || textHas("olive oil allowed")) {
-    forbiddenSet.delete("Oil");
-    allowedSet.add("Oil");
-  }
+  // Explicit phrases override the general exception map if the API wording is more specific.
+  if (t.includes("fish allowed") || t.includes("fish is allowed")) allow("Fish");
+  if (t.includes("wine allowed") || t.includes("wine is allowed")) allow("Wine");
+  if (t.includes("oil allowed") || t.includes("oil is allowed") || t.includes("olive oil allowed")) allow("Oil");
 
-  // Explicit "no X" phrases always override allowances
-  if (textHas("no meat")) {
-    forbiddenSet.add("Meat");
-    allowedSet.delete("Meat");
-  }
-  if (textHas("no dairy")) {
-    forbiddenSet.add("Dairy");
-    allowedSet.delete("Dairy");
-  }
-  if (textHas("no eggs")) {
-    forbiddenSet.add("Eggs");
-    allowedSet.delete("Eggs");
-  }
-  if (textHas("no fish")) {
-    forbiddenSet.add("Fish");
-    allowedSet.delete("Fish");
-  }
-  if (textHas("no wine") || textHas("no alcohol")) {
-    forbiddenSet.add("Wine");
-    allowedSet.delete("Wine");
-  }
-  if (textHas("no oil") || textHas("no olive oil")) {
-    forbiddenSet.add("Oil");
-    allowedSet.delete("Oil");
-  }
+  const forbid = food => { forbiddenSet.add(food); allowedSet.delete(food); };
+  if (t.includes("no meat") || t.includes("abstain from meat")) forbid("Meat");
+  if (t.includes("no dairy") || t.includes("abstain from dairy")) forbid("Dairy");
+  if (t.includes("no eggs") || t.includes("abstain from eggs")) forbid("Eggs");
+  if (t.includes("no fish") || t.includes("abstain from fish")) forbid("Fish");
+  if (t.includes("no wine") || t.includes("abstain from wine") || t.includes("no alcohol")) forbid("Wine");
+  if (t.includes("no oil") || t.includes("abstain from oil") || t.includes("no olive oil")) forbid("Oil");
 
   return {
-    label: combined,
+    label: fastLevelDesc || combined || "Fast",
     isNoFast: false,
     allowed: Array.from(allowedSet),
-    forbidden: Array.from(forbiddenSet)
+    forbidden: Array.from(forbiddenSet),
+    exceptionText: fastExceptionDesc || "",
+    specialAllowed: exception === 6 ? ["Caviar"] : []
   };
 }
-
 
 
 function normalizeReadingText(raw) {
@@ -362,9 +287,64 @@ function normalizeReadingText(raw) {
 }
 
 
-function findCommemorationDetail(data, name) {
+function normalizeCommemorationLabel(value) {
+  return String(value || "")
+    .toLowerCase()
+    .replace(/&[^;]+;/g, " ")
+    .replace(/\bst[.]?\b/g, "saint")
+    .replace(/[^\p{L}\p{N}]+/gu, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+function isAdministrativeCommemoration(title) {
+  const t = normalizeCommemorationLabel(title);
+  return /^(canonization|glorification)\b/.test(t) || /\b(canonization|glorification)\s+of\b/.test(t);
+}
+
+function findStoryForSaint(data, name, index = -1) {
+  const stories = Array.isArray(data?.stories) ? data.stories.filter(Boolean) : [];
+  if (!stories.length || !name) return null;
+
+  const target = normalizeCommemorationLabel(name);
+  const stop = new Set(["saint","holy","martyr","martyrs","venerable","apostle","hieromartyr","bishop","priest","monk","nun","new","the","of","and","our","father","mother"]);
+  const targetTokens = target.split(" ").filter(w => w.length > 2 && !stop.has(w));
+  let best = null;
+  let bestScore = 0;
+
+  stories.forEach((story, storyIndex) => {
+    const title = normalizeCommemorationLabel(story?.title || story?.name || "");
+    if (!title) return;
+    if (title === target || title.includes(target) || target.includes(title)) {
+      const score = 1000 - Math.abs(title.length - target.length);
+      if (score > bestScore) { best = story; bestScore = score; }
+      return;
+    }
+    const titleTokens = new Set(title.split(" ").filter(w => w.length > 2 && !stop.has(w)));
+    const hits = targetTokens.filter(w => titleTokens.has(w)).length;
+    const score = targetTokens.length ? hits / targetTokens.length : 0;
+    if (score > bestScore && (hits >= 2 || score >= .67)) {
+      best = story;
+      bestScore = score;
+    }
+  });
+
+  // Orthocal commonly returns saints and stories in corresponding order. Use that
+  // only when name matching could not identify a story and the indexed story exists.
+  if (!best && index >= 0 && stories[index]) best = stories[index];
+  return best;
+}
+
+function findCommemorationDetail(data, name, index = -1) {
   if (!data || !name) return "";
   const n = name.trim().toLowerCase();
+
+  // Orthocal's documented daily endpoint supplies lives of the saints in `stories`.
+  const story = findStoryForSaint(data, name, index);
+  if (story) {
+    const text = story.story || story.text || story.description || story.life || "";
+    if (text) return String(text).trim();
+  }
 
   // Helper: deep search data for a long string mentioning this name
   function deepSearch(obj) {
@@ -587,10 +567,27 @@ function buildFeastDescription(text) {
         liturgicalDateEl.textContent = `${d} ${monthName(m)} ${y}`;
       }
 
-      const saintsArray = Array.isArray(data.saints) ? data.saints : [];
+      const namedSaints = Array.isArray(data.saints) ? data.saints.filter(Boolean).map(String) : [];
+      const storyTitles = Array.isArray(data.stories)
+        ? data.stories.map(story => story?.title || story?.name || "").filter(Boolean)
+        : [];
+      const saintsArray = [];
 
-      // Saints of the day with richer descriptions
-      
+      // Use only the date-specific commemorations returned by Orthocal. Some Orthocal
+      // records also contain administrative anniversaries (for example a canonization
+      // anniversary) whose saint's actual feast falls on another date. Those are not
+      // shown in the saints list.
+      [...namedSaints, ...storyTitles].forEach(title => {
+        if (!title || isAdministrativeCommemoration(title)) return;
+        const normalized = normalizeCommemorationLabel(title);
+        const alreadyListed = saintsArray.some(name => {
+          const n = normalizeCommemorationLabel(name);
+          return n === normalized || n.includes(normalized) || normalized.includes(n);
+        });
+        if (!alreadyListed) saintsArray.push(title);
+      });
+
+      // Saints of the day with the corresponding life/story returned by Orthocal.
 
 if (saintsListEl) {
         saintsListEl.innerHTML = "";
@@ -625,7 +622,7 @@ if (saintsListEl) {
             body.className = "reading-body";
             body.style.display = "none";
 
-            const fullText = findCommemorationDetail(data, s);
+            const fullText = findCommemorationDetail(data, s, idx);
             if (fullText) {
               const text = String(fullText).trim();
               if (/[<>&]/.test(text)) {
@@ -634,7 +631,7 @@ if (saintsListEl) {
                 body.textContent = text;
               }
             } else {
-              body.textContent = "No further details are available.";
+              body.textContent = `${s} is commemorated today in the Orthodox calendar. Our data source does not reveal any further information for this commemoration, so please feel free to use Google to learn more.`;
             }
 
             const toggleBody = () => {
@@ -676,7 +673,7 @@ if (saintsListEl) {
 
         const fastLevelDesc = data.fast_level_desc || "";
         const fastExceptionDesc = data.fast_exception_desc || "";
-        const rules = computeFastRules(fastLevelDesc, fastExceptionDesc);
+        const rules = computeFastRules(fastLevelDesc, fastExceptionDesc, data.fast_level, data.fast_exception);
 
         const li = document.createElement("li");
 
@@ -717,20 +714,34 @@ if (saintsListEl) {
         body.className = "reading-body";
         body.style.display = "none";
 
-        // Body text: show exception description if present, otherwise a simple "no exceptions" line.
-        let detailText = "";
         if (rules.isNoFast) {
-          detailText = "There is no fasting prescribed for this day.";
-        } else if (
-          fastExceptionDesc &&
-          fastExceptionDesc.toLowerCase() !== "no overrides"
-        ) {
-          detailText = fastExceptionDesc;
+          body.textContent = "There is no fasting prescribed for this day.";
         } else {
-          detailText = "There are no exceptions for today's fast.";
-        }
+          const forbidden = rules.forbidden || [];
+          const allowed = rules.allowed || [];
 
-        body.textContent = detailText;
+          const restriction = document.createElement("p");
+          restriction.className = "fast-rule-summary";
+          restriction.textContent = forbidden.length
+            ? `Abstain from ${forbidden.map(x => x.toLowerCase()).join(", ")}.`
+            : "Follow the fasting guidance shown for this day.";
+          body.appendChild(restriction);
+
+          const allowedToday = [...allowed, ...(rules.specialAllowed || [])];
+          if (allowedToday.length) {
+            const allowance = document.createElement("p");
+            allowance.className = "fast-rule-allowance";
+            allowance.textContent = `Allowed today: ${allowedToday.join(", ")}.`;
+            body.appendChild(allowance);
+          }
+
+          if (fastExceptionDesc && fastExceptionDesc.toLowerCase() !== "no overrides") {
+            const exception = document.createElement("p");
+            exception.className = "fast-rule-source";
+            exception.textContent = fastExceptionDesc;
+            body.appendChild(exception);
+          }
+        }
 
         const toggleBody = () => {
           if (body.style.display === "none" || !body.style.display) {
@@ -926,6 +937,7 @@ if (saintsListEl) {
           readingsEmpty.style.display = "block";
         }
       }
+      window.OrthodoxAccessibility?.refreshTranslation?.();
     } catch (err) {
       console.error(err);
       if (errorEl) {
@@ -1076,10 +1088,15 @@ if (saintsListEl) {
   // Make sure these file names exist in russian-assets/music/
 const HYMN_TRACKS = [
     { title: "Belisarius", src: "russian-assets/music/Belisarius.mp3" },
-    { title: "We Praise Thee", src: "russian-assets/music/We Praise Thee.mp3" },
-    { title: "My Sinful Soul", src: "russian-assets/music/My Sinful Soul.mp3" },
-    { title: "Lord, I have cried unto Thee", src: "russian-assets/music/Lord, I have cried unto Thee.mp3" },
+    { title: "Cherubic Hymn", src: "russian-assets/music/Cherubic Hymn.mp3" },
     { title: "Hymn of the Cherubim", src: "russian-assets/music/Hymn of the Cherubim.mp3" },
+    { title: "Lord, I have cried unto Thee", src: "russian-assets/music/Lord, I have cried unto Thee.mp3" },
+    { title: "May my prayer be set forth", src: "russian-assets/music/May my prayer be set forth.mp3" },
+    { title: "My Sinful Soul", src: "russian-assets/music/My Sinful Soul.mp3" },
+    { title: "Open to me the doors of repentance", src: "russian-assets/music/Open to me the doors of repentance.mp3" },
+    { title: "That We May Receive the King", src: "russian-assets/music/That We May Receive the King.mp3" },
+    { title: "We bow down before Your Cross", src: "russian-assets/music/We bow down before Your Cross.mp3" },
+    { title: "We Praise Thee", src: "russian-assets/music/We Praise Thee.mp3" },
   ];
 ;
 

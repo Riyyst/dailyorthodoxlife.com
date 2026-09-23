@@ -5011,3 +5011,1027 @@ html.oa-persistent-audio-shell .oa-player {
   .oa-hero h2,
   .oa-hero-carousel .oa-hero-content h2 { font-size: 2.35rem; }
 }
+
+/* =========================================================
+   Accessibility controls and consistent vector prayer cross
+   ========================================================= */
+
+.oa-prayer-cross {
+  display: grid !important;
+  place-items: center !important;
+  width: 20px !important;
+  height: 28px !important;
+  color: #a7772f !important;
+  line-height: 1 !important;
+}
+
+.oa-prayer-cross svg {
+  display: block;
+  width: 13px;
+  height: 21px;
+  overflow: visible;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.35;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.oa-accessibility {
+  position: fixed;
+  top: max(12px, env(safe-area-inset-top));
+  right: max(12px, env(safe-area-inset-right));
+  z-index: 10040;
+  font-family: ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+}
+
+.oa-accessibility-toggle {
+  width: 40px;
+  height: 40px;
+  min-height: 40px;
+  padding: 0;
+  display: grid;
+  place-items: center;
+  border: 1px solid rgba(91, 66, 41, .2);
+  border-radius: 50%;
+  background: rgba(248, 244, 236, .94);
+  color: #493426;
+  box-shadow: 0 4px 16px rgba(38, 27, 19, .08);
+  backdrop-filter: blur(8px);
+  cursor: pointer;
+}
+
+.oa-accessibility-toggle svg {
+  width: 21px;
+  height: 21px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.75;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.oa-accessibility-toggle:hover,
+.oa-accessibility-toggle:focus-visible {
+  border-color: rgba(167, 119, 47, .5);
+  color: #8a5d22;
+  outline: 3px solid rgba(167, 119, 47, .17);
+  outline-offset: 2px;
+}
+
+.oa-accessibility-panel {
+  position: absolute;
+  top: 48px;
+  right: 0;
+  width: min(310px, calc(100vw - 24px));
+  padding: 15px;
+  border: 1px solid rgba(91, 66, 41, .16);
+  border-radius: 12px;
+  background: #fbf8f2;
+  color: #2e2118;
+  box-shadow: 0 16px 38px rgba(37, 25, 17, .16);
+}
+
+.oa-accessibility-panel[hidden] { display: none !important; }
+
+.oa-accessibility-panel header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.oa-accessibility-panel header strong {
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 1rem;
+}
+
+.oa-accessibility-close {
+  width: 28px;
+  height: 28px;
+  min-height: 28px;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: transparent;
+  color: #6c5c50;
+  font-size: 1.15rem;
+  cursor: pointer;
+}
+
+.oa-a11y-field,
+.oa-a11y-switch {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  min-height: 42px;
+  border-top: 1px solid rgba(91, 66, 41, .10);
+  font-size: .78rem;
+}
+
+.oa-a11y-field select {
+  max-width: 160px;
+  min-height: 32px;
+  padding: 4px 26px 4px 8px;
+  border: 1px solid rgba(91, 66, 41, .18);
+  border-radius: 6px;
+  background: #fffdf9;
+  color: #34251a;
+  font: inherit;
+}
+
+.oa-a11y-switch input {
+  width: 18px;
+  height: 18px;
+  accent-color: #9a6a2c;
+}
+
+.oa-a11y-reset {
+  width: 100%;
+  min-height: 34px;
+  margin-top: 10px;
+  border: 1px solid rgba(91, 66, 41, .16);
+  border-radius: 6px;
+  background: transparent;
+  color: #704c21;
+  font: inherit;
+  font-size: .74rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.oa-accessibility-panel > small {
+  display: block;
+  margin-top: 9px;
+  color: #796d62;
+  font-size: .62rem;
+  line-height: 1.4;
+}
+
+.oa-google-translate-host {
+  position: fixed !important;
+  left: -10000px !important;
+  top: -10000px !important;
+  width: 1px !important;
+  height: 1px !important;
+  overflow: hidden !important;
+}
+
+body.oa-a11y-reduce-motion *,
+body.oa-a11y-reduce-motion *::before,
+body.oa-a11y-reduce-motion *::after {
+  animation-duration: .001ms !important;
+  animation-iteration-count: 1 !important;
+  transition-duration: .001ms !important;
+  scroll-behavior: auto !important;
+}
+
+body.oa-a11y-underline-links a:not(.oa-dock-link) {
+  text-decoration: underline !important;
+  text-underline-offset: .18em;
+}
+
+body.oa-a11y-contrast {
+  --oa-bg: #ffffff !important;
+  --oa-surface: #ffffff !important;
+  --oa-ink: #050505 !important;
+  --oa-muted: #292929 !important;
+  --oa-gold: #704700 !important;
+  --oa-gold-soft: #fff0c9 !important;
+}
+
+body.oa-a11y-contrast .oa-page,
+body.oa-a11y-contrast .reader-page,
+body.oa-a11y-contrast .app-shell,
+body.oa-a11y-contrast .oa-modal-panel,
+body.oa-a11y-contrast .oa-accessibility-panel {
+  color: #050505 !important;
+}
+
+body.oa-a11y-contrast :focus-visible {
+  outline: 3px solid #111 !important;
+  outline-offset: 3px !important;
+}
+
+@media (max-width: 760px) {
+  .oa-accessibility {
+    top: max(8px, env(safe-area-inset-top));
+    right: max(8px, env(safe-area-inset-right));
+  }
+  .oa-accessibility-toggle {
+    width: 36px;
+    height: 36px;
+    min-height: 36px;
+  }
+  .oa-accessibility-panel { top: 43px; }
+}
+
+
+/* =========================================================
+   Mk19, prayer favourites and unobtrusive translation
+   ========================================================= */
+
+.oa-prayer-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 38px;
+  align-items: center;
+  border-bottom: 1px solid rgba(111, 82, 49, .12);
+}
+
+.oa-prayer-row:last-child { border-bottom: 0; }
+
+.oa-prayer-row .oa-prayer-card-button {
+  border-bottom: 0 !important;
+  min-width: 0;
+  grid-template-columns: 22px minmax(0, 1fr) !important;
+  padding-right: 6px !important;
+}
+
+.oa-prayer-favourite {
+  width: 34px;
+  height: 34px;
+  min-height: 34px;
+  padding: 0;
+  display: grid;
+  place-items: center;
+  border: 0;
+  border-radius: 50%;
+  background: transparent;
+  color: #9b846a;
+  cursor: pointer;
+}
+
+.oa-prayer-favourite svg {
+  width: 18px;
+  height: 18px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.55;
+  stroke-linejoin: round;
+  transition: transform .16s ease, fill .16s ease, color .16s ease;
+}
+
+.oa-prayer-favourite:hover,
+.oa-prayer-favourite:focus-visible {
+  color: #9a6829;
+  background: rgba(167, 119, 47, .07);
+  outline: 2px solid rgba(167, 119, 47, .16);
+  outline-offset: 1px;
+}
+
+.oa-prayer-favourite.is-favourite {
+  color: #a7772f;
+}
+
+.oa-prayer-favourite.is-favourite svg {
+  fill: currentColor;
+  transform: scale(1.04);
+}
+
+.oa-favourite-count {
+  display: inline-block;
+  min-width: 1.25em;
+  margin-left: .18em;
+  font-size: .78em;
+  opacity: .75;
+}
+
+/* Google Translate may inject a legacy or current toolbar. Keep translation active
+   but prevent that toolbar from shifting or covering the app. */
+body > .skiptranslate,
+iframe.goog-te-banner-frame,
+.goog-te-banner-frame,
+.VIpgJd-ZVi9od-ORHb-OEVmcd,
+.VIpgJd-ZVi9od-aZ2wEe-wOHMyf {
+  display: none !important;
+  visibility: hidden !important;
+  height: 0 !important;
+}
+
+html.translated-ltr,
+html.translated-rtl,
+html.translated-ltr body,
+html.translated-rtl body,
+body {
+  top: 0 !important;
+}
+
+
+/* =========================================================
+   Mk20, prayer categories and stable prayer list
+   ========================================================= */
+
+#prayer-filters.oa-chip-row {
+  display: flex !important;
+  flex-wrap: wrap !important;
+  align-items: center;
+  gap: 7px 8px !important;
+  overflow: visible !important;
+  overflow-x: visible !important;
+  white-space: normal !important;
+  padding: 4px 0 8px !important;
+  scrollbar-width: none;
+}
+
+#prayer-filters .oa-filter-chip {
+  flex: 0 0 auto;
+  white-space: nowrap !important;
+}
+
+/* The prayer index is interactive content, not an entrance animation target. */
+#prayer-grid,
+#prayer-grid.oa-reveal,
+#prayer-grid.oa-reveal.is-visible {
+  opacity: 1 !important;
+  transform: none !important;
+  transition: none !important;
+  animation: none !important;
+}
+
+/* =========================================================
+   Mk21, seamless persistent translation and single a11y control
+   ========================================================= */
+
+/* Cross-document transitions let the previous page remain visually present
+   while the next same-origin page is prepared. */
+@view-transition {
+  navigation: auto;
+}
+
+/* Never flash the English source page while a remembered translation is
+   being restored. The translation bootstrap adds this class before first paint. */
+html.oa-translation-pending body::after {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: 2147483000;
+  background: var(--oa-bg, #f7f4ee);
+  pointer-events: none;
+}
+
+html.oa-translation-ready body::after {
+  display: none !important;
+}
+
+/* In the persistent-audio shell, keep the previous page visible until the
+   replacement iframe confirms its translation is ready. */
+.oa-persistent-frame {
+  opacity: 1;
+  transition: opacity .12s ease;
+}
+
+.oa-persistent-frame.is-loading {
+  opacity: 0;
+  pointer-events: none;
+  background: transparent !important;
+}
+
+/* The parent shell owns the one accessibility button while framed pages are open. */
+html.oa-persistent-audio-shell .oa-accessibility {
+  z-index: 1600 !important;
+}
+
+
+/* =========================================================
+   Mk22, fast first load
+   ========================================================= */
+
+/* Translation must never block navigation or make the first page appear hung.
+   A remembered language may visibly settle in shortly after load, but the app
+   remains interactive throughout. */
+html.oa-translation-pending body::after,
+html.oa-translation-ready body::after {
+  display: none !important;
+  content: none !important;
+}
+
+/* Keep the accessibility control visible above the homepage carousel and all
+   other ordinary page content. */
+body > .oa-accessibility {
+  position: fixed !important;
+  z-index: 2147482000 !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+}
+
+
+/* =========================================================
+   Mk23, stable non-blocking translation
+   ========================================================= */
+
+/* Never cover or block the application while a translation service loads. */
+html.oa-translation-pending body::after,
+html.oa-translation-ready body::after {
+  display: none !important;
+  content: none !important;
+}
+
+/* Translation is no longer used to gate persistent-page visibility. */
+.oa-persistent-frame,
+.oa-persistent-frame.is-loading {
+  opacity: 1 !important;
+  pointer-events: auto !important;
+}
+
+/* Accessibility control must be present on Home and every other top-level page. */
+body > .oa-accessibility {
+  display: block !important;
+  position: fixed !important;
+  z-index: 2147482000 !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+}
+
+
+/* =========================================================
+   Mk25, 404 page
+   ========================================================= */
+
+.oa-404-page {
+  min-height: 100dvh;
+  background:
+    radial-gradient(circle at 50% 16%, rgba(174,126,61,.09), transparent 34rem),
+    var(--oa-bg, #f7f4ee);
+}
+
+.oa-404-main {
+  min-height: calc(100dvh - var(--oa-dock-h, 76px));
+  display: grid;
+  place-items: center;
+  padding-top: clamp(30px, 5vw, 70px);
+  padding-bottom: clamp(110px, 13vw, 150px);
+}
+
+.oa-404-content {
+  width: min(850px, calc(100% - 28px));
+  margin: 0 auto;
+  text-align: center;
+}
+
+.oa-404-art {
+  width: min(540px, 76vw);
+  margin: 0 auto clamp(10px, 2vw, 22px);
+}
+
+.oa-404-art img {
+  display: block;
+  width: 100%;
+  height: auto;
+  object-fit: contain;
+}
+
+.oa-404-code {
+  margin: 0 0 5px;
+  color: var(--oa-gold, #a17436);
+  font-size: .72rem;
+  font-weight: 800;
+  letter-spacing: .22em;
+  text-transform: uppercase;
+}
+
+.oa-404-content h1 {
+  margin: 0;
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: clamp(2rem, 5.5vw, 4rem);
+  line-height: 1.02;
+  font-weight: 500;
+  color: var(--oa-ink, #2b2119);
+}
+
+.oa-404-copy {
+  max-width: 600px;
+  margin: 16px auto 0;
+  color: var(--oa-muted, #75685c);
+  font-size: clamp(.92rem, 1.8vw, 1.04rem);
+  line-height: 1.65;
+}
+
+.oa-404-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 9px;
+  margin-top: 25px;
+}
+
+.oa-404-actions a {
+  min-width: 112px;
+}
+
+@media (max-width: 560px) {
+  .oa-404-art {
+    width: min(380px, 88vw);
+  }
+
+  .oa-404-actions {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    width: min(360px, 100%);
+    margin-left: auto;
+    margin-right: auto;
+  }
+
+  .oa-404-actions a:first-child {
+    grid-column: 1 / -1;
+  }
+}
+
+
+/* =========================================================
+   Mk25, minimisable audio shell
+   ========================================================= */
+
+.oa-player-minimise {
+  position: static;
+  width: 30px;
+  height: 30px;
+  min-height: 30px;
+  padding: 0;
+  display: grid;
+  place-items: center;
+  flex: 0 0 auto;
+  border: 0;
+  border-radius: 50%;
+  background: transparent;
+  color: rgba(255,255,255,.72);
+  cursor: pointer;
+}
+
+.oa-player-minimise svg {
+  width: 17px;
+  height: 17px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.8;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  transition: transform .2s ease;
+}
+
+.oa-player-minimise:hover,
+.oa-player-minimise:focus-visible {
+  background: rgba(255,255,255,.09);
+  color: #fff7e9;
+  outline: none;
+}
+
+.oa-player.is-minimized .oa-player-minimise svg {
+  transform: rotate(180deg);
+}
+
+.oa-player.is-minimized {
+  width: min(620px, calc(100% - 24px)) !important;
+  bottom: 12px !important;
+  grid-template-columns: auto 1fr auto !important;
+  grid-template-rows: auto auto !important;
+  column-gap: 10px !important;
+  row-gap: 7px !important;
+  padding: 8px 10px !important;
+  border-radius: 14px !important;
+}
+
+.oa-player.is-minimized .oa-player-meta,
+.oa-player.is-minimized .oa-player-volume {
+  display: none !important;
+}
+
+.oa-player.is-minimized .oa-player-controls {
+  grid-column: 1 !important;
+  grid-row: 1 !important;
+  justify-self: start !important;
+  gap: 5px !important;
+}
+
+.oa-player.is-minimized .oa-player-tools {
+  grid-column: 3 !important;
+  grid-row: 1 !important;
+  justify-self: end !important;
+  justify-content: flex-end !important;
+  gap: 5px !important;
+}
+
+.oa-player.is-minimized .oa-player-progress {
+  grid-column: 1 / -1 !important;
+  grid-row: 2 !important;
+  display: grid !important;
+  grid-template-columns: 34px minmax(0, 1fr) 34px !important;
+  gap: 7px !important;
+}
+
+.oa-player.is-minimized .oa-player-btn {
+  width: 34px !important;
+  height: 34px !important;
+}
+
+.oa-player.is-minimized .oa-player-btn svg {
+  width: 16px !important;
+  height: 16px !important;
+}
+
+.oa-player.is-minimized .oa-player-timer,
+.oa-player.is-minimized .oa-player-minimise,
+.oa-player.is-minimized .oa-player-close {
+  width: 30px !important;
+  height: 30px !important;
+  min-height: 30px !important;
+}
+
+.oa-player.is-minimized .oa-sleep-panel {
+  right: 0 !important;
+  bottom: calc(100% + 8px) !important;
+  transform: none !important;
+}
+
+@media (max-width: 760px) {
+  .oa-player.is-minimized {
+    left: 6px !important;
+    right: 6px !important;
+    width: auto !important;
+    bottom: calc(72px + env(safe-area-inset-bottom)) !important;
+    transform: translateY(0) !important;
+    grid-template-columns: 1fr auto !important;
+    grid-template-rows: auto auto !important;
+    padding: 7px 9px !important;
+    border-radius: 12px !important;
+  }
+
+  .oa-player.is-minimized .oa-player-controls {
+    grid-column: 1 !important;
+    grid-row: 1 !important;
+    justify-self: start !important;
+  }
+
+  .oa-player.is-minimized .oa-player-tools {
+    grid-column: 2 !important;
+    grid-row: 1 !important;
+    justify-self: end !important;
+  }
+
+  .oa-player.is-minimized .oa-player-progress {
+    grid-column: 1 / -1 !important;
+    grid-row: 2 !important;
+  }
+
+  .oa-player.is-minimized .oa-player-btn {
+    width: 31px !important;
+    height: 31px !important;
+  }
+
+  .oa-player.is-minimized .oa-player-timer,
+  .oa-player.is-minimized .oa-player-minimise,
+  .oa-player.is-minimized .oa-player-close {
+    width: 28px !important;
+    height: 28px !important;
+    min-height: 28px !important;
+  }
+}
+
+@media (max-width: 390px) {
+  .oa-player.is-minimized .oa-player-controls,
+  .oa-player.is-minimized .oa-player-tools {
+    gap: 3px !important;
+  }
+
+  .oa-player.is-minimized .oa-player-btn {
+    width: 29px !important;
+    height: 29px !important;
+  }
+
+  .oa-player.is-minimized .oa-player-timer,
+  .oa-player.is-minimized .oa-player-minimise,
+  .oa-player.is-minimized .oa-player-close {
+    width: 27px !important;
+    height: 27px !important;
+    min-height: 27px !important;
+  }
+}
+
+
+/* =========================================================
+   Mk26, 404 navigation contrast
+   ========================================================= */
+
+.oa-404-actions a {
+  color: #2b2119 !important;
+  background: rgba(255,255,255,.52) !important;
+  border: 1px solid rgba(87,61,34,.22) !important;
+  text-decoration: none !important;
+}
+
+.oa-404-actions a:hover,
+.oa-404-actions a:focus-visible {
+  color: #20150f !important;
+  background: #fffaf2 !important;
+  border-color: rgba(87,61,34,.38) !important;
+  outline: none;
+}
+
+.oa-404-actions a.oa-primary {
+  color: #fff8ed !important;
+  background: #2a1d15 !important;
+  border-color: #2a1d15 !important;
+}
+
+.oa-404-actions a.oa-primary:hover,
+.oa-404-actions a.oa-primary:focus-visible {
+  color: #fff !important;
+  background: #3a281d !important;
+  border-color: #3a281d !important;
+}
+
+
+/* =========================================================
+   Mk27, ultra-compact minimised audio shell
+   ========================================================= */
+
+/* Closed means closed, even if an older minimised state is still present. */
+.oa-player:not(.is-visible) {
+  pointer-events: none !important;
+}
+
+.oa-player.is-minimized:not(.is-visible) {
+  opacity: 0 !important;
+  visibility: hidden !important;
+}
+
+/* The compact shell is a single thin row:
+   transport | slider | timer / expand / close */
+.oa-player.is-minimized.is-visible {
+  width: min(560px, calc(100% - 20px)) !important;
+  min-height: 0 !important;
+  bottom: 8px !important;
+  padding: 4px 6px !important;
+  border-radius: 11px !important;
+  display: grid !important;
+  grid-template-columns: auto minmax(70px, 1fr) auto !important;
+  grid-template-rows: 28px !important;
+  align-items: center !important;
+  column-gap: 7px !important;
+  row-gap: 0 !important;
+  opacity: 1 !important;
+  visibility: visible !important;
+  transform: translateX(-50%) translateY(0) !important;
+}
+
+.oa-player.is-minimized .oa-player-meta,
+.oa-player.is-minimized .oa-player-volume {
+  display: none !important;
+}
+
+.oa-player.is-minimized .oa-player-controls {
+  grid-column: 1 !important;
+  grid-row: 1 !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-self: start !important;
+  gap: 3px !important;
+}
+
+.oa-player.is-minimized .oa-player-progress {
+  grid-column: 2 !important;
+  grid-row: 1 !important;
+  display: block !important;
+  min-width: 0 !important;
+  width: 100% !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  line-height: 0 !important;
+}
+
+.oa-player.is-minimized .oa-player-progress > span {
+  display: none !important;
+}
+
+.oa-player.is-minimized .oa-player-progress input {
+  display: block !important;
+  width: 100% !important;
+  height: 14px !important;
+  margin: 0 !important;
+  cursor: pointer;
+}
+
+.oa-player.is-minimized .oa-player-tools {
+  grid-column: 3 !important;
+  grid-row: 1 !important;
+  position: relative !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-self: end !important;
+  justify-content: flex-end !important;
+  gap: 3px !important;
+  min-width: 0 !important;
+}
+
+/* Back / play / next are deliberately tiny in compact mode. */
+.oa-player.is-minimized .oa-player-btn {
+  width: 26px !important;
+  height: 26px !important;
+  min-width: 26px !important;
+  min-height: 26px !important;
+  padding: 0 !important;
+  border-radius: 50% !important;
+}
+
+.oa-player.is-minimized .oa-player-btn svg {
+  width: 13px !important;
+  height: 13px !important;
+}
+
+.oa-player.is-minimized .oa-player-btn.play {
+  width: 28px !important;
+  height: 28px !important;
+  min-width: 28px !important;
+  min-height: 28px !important;
+}
+
+/* Timer, expand and close stay available but do not increase the bar height. */
+.oa-player.is-minimized .oa-player-timer,
+.oa-player.is-minimized .oa-player-minimise,
+.oa-player.is-minimized .oa-player-close {
+  position: static !important;
+  inset: auto !important;
+  width: 24px !important;
+  height: 24px !important;
+  min-width: 24px !important;
+  min-height: 24px !important;
+  padding: 0 !important;
+  margin: 0 !important;
+}
+
+.oa-player.is-minimized .oa-player-timer svg,
+.oa-player.is-minimized .oa-player-minimise svg {
+  width: 14px !important;
+  height: 14px !important;
+}
+
+.oa-player.is-minimized .oa-player-close {
+  font-size: .92rem !important;
+  line-height: 1 !important;
+}
+
+/* The remaining-time badge used too much vertical space in compact mode. */
+.oa-player.is-minimized #audio-sleep-timer-badge,
+.oa-player.is-minimized .oa-player-timer-badge {
+  display: none !important;
+}
+
+/* Timer menu still opens above the compact shell. */
+.oa-player.is-minimized .oa-sleep-panel {
+  right: 0 !important;
+  bottom: calc(100% + 7px) !important;
+  transform: none !important;
+}
+
+/* Mobile: sit immediately above the app nav and use almost the full width. */
+@media (max-width: 760px) {
+  .oa-player.is-minimized.is-visible {
+    left: 6px !important;
+    right: 6px !important;
+    width: auto !important;
+    bottom: calc(var(--oa-dock-h, 76px) + env(safe-area-inset-bottom) + 3px) !important;
+    grid-template-columns: auto minmax(48px, 1fr) auto !important;
+    grid-template-rows: 28px !important;
+    column-gap: 5px !important;
+    padding: 4px 5px !important;
+    border-radius: 10px !important;
+    transform: none !important;
+  }
+
+  .oa-player.is-minimized .oa-player-controls,
+  .oa-player.is-minimized .oa-player-tools {
+    gap: 2px !important;
+  }
+
+  .oa-player.is-minimized .oa-player-btn {
+    width: 24px !important;
+    height: 24px !important;
+    min-width: 24px !important;
+    min-height: 24px !important;
+  }
+
+  .oa-player.is-minimized .oa-player-btn.play {
+    width: 27px !important;
+    height: 27px !important;
+    min-width: 27px !important;
+    min-height: 27px !important;
+  }
+
+  .oa-player.is-minimized .oa-player-timer,
+  .oa-player.is-minimized .oa-player-minimise,
+  .oa-player.is-minimized .oa-player-close {
+    width: 23px !important;
+    height: 23px !important;
+    min-width: 23px !important;
+    min-height: 23px !important;
+  }
+
+  .oa-player.is-minimized .oa-player-progress input {
+    height: 12px !important;
+  }
+}
+
+@media (max-width: 360px) {
+  .oa-player.is-minimized.is-visible {
+    left: 4px !important;
+    right: 4px !important;
+    column-gap: 3px !important;
+    padding-inline: 4px !important;
+  }
+
+  .oa-player.is-minimized .oa-player-btn {
+    width: 22px !important;
+    height: 22px !important;
+    min-width: 22px !important;
+    min-height: 22px !important;
+  }
+
+  .oa-player.is-minimized .oa-player-btn.play {
+    width: 25px !important;
+    height: 25px !important;
+    min-width: 25px !important;
+    min-height: 25px !important;
+  }
+
+  .oa-player.is-minimized .oa-player-timer,
+  .oa-player.is-minimized .oa-player-minimise,
+  .oa-player.is-minimized .oa-player-close {
+    width: 21px !important;
+    height: 21px !important;
+    min-width: 21px !important;
+    min-height: 21px !important;
+  }
+}
+
+
+/* =========================================================
+   Mk28, attached mobile player + shorter 404
+   ========================================================= */
+
+/* On mobile, visually connect the collapsed player directly to the nav bar. */
+@media (max-width: 760px) {
+  .oa-player.is-minimized.is-visible {
+    bottom: calc(var(--oa-dock-h, 76px) + env(safe-area-inset-bottom) - 1px) !important;
+    border-radius: 10px 10px 0 0 !important;
+    border-bottom-color: transparent !important;
+    box-shadow: 0 -5px 18px rgba(38, 26, 18, .12) !important;
+  }
+}
+
+/* Make the 404 page more compact so it fits without unnecessary scrolling. */
+.oa-404-main {
+  padding-top: clamp(18px, 3vw, 34px) !important;
+  padding-bottom: clamp(86px, 9vw, 108px) !important;
+}
+
+.oa-404-art {
+  width: min(430px, 64vw) !important;
+  margin-bottom: 8px !important;
+}
+
+.oa-404-copy {
+  margin-top: 11px !important;
+}
+
+.oa-404-actions {
+  margin-top: 18px !important;
+}
+
+@media (max-width: 560px) {
+  .oa-404-art {
+    width: min(285px, 70vw) !important;
+  }
+
+  .oa-404-main {
+    padding-top: 12px !important;
+    padding-bottom: calc(var(--oa-dock-h, 76px) + 18px) !important;
+  }
+
+  .oa-404-content h1 {
+    font-size: clamp(1.8rem, 8vw, 2.5rem) !important;
+  }
+
+  .oa-404-copy {
+    line-height: 1.5 !important;
+  }
+}
+
+
+/* =========================================================
+   Mk29, exact mobile player/nav join
+   ========================================================= */
+
+@media (max-width: 760px) {
+  /* Give the mobile navigation an explicit height and use that exact same
+     measurement for the compact player, so there can be no gap between them. */
+  .oa-dock {
+    height: calc(68px + env(safe-area-inset-bottom)) !important;
+    min-height: calc(68px + env(safe-area-inset-bottom)) !important;
+  }
+
+  .oa-player.is-minimized.is-visible {
+    bottom: calc(68px + env(safe-area-inset-bottom) - 1px) !important;
+    margin-bottom: 0 !important;
+  }
+}

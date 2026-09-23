@@ -74,7 +74,7 @@
   async function createEmbeddedPdfBytes() {
     if (state.embeddedPdfBytes) return state.embeddedPdfBytes;
 
-    setStatus("Preparing the local copy of the book…");
+    setStatus("Loading the Study Bible…");
     if (!Number.isInteger(window.ORTHODOX_PDF_DATA_CHUNK_COUNT)) {
       await loadScript(PDF_DATA_MANIFEST);
     }
@@ -97,7 +97,7 @@
       }
       scripts.push(...await Promise.all(batch));
       const percent = Math.round((batchEnd / chunkCount) * 100);
-      setStatus(`Preparing the local copy of the book, ${percent} percent.`);
+      setStatus(`Loading the Study Bible, ${percent} percent.`);
       await new Promise((resolve) => window.setTimeout(resolve, 0));
     }
 
@@ -158,6 +158,13 @@
     return bookLabel === "Psalms" ? `Psalm ${partLabel}` : `Chapter ${partLabel}`;
   }
 
+  function queueTranslationRefresh(delay = 80) {
+    window.clearTimeout(queueTranslationRefresh.timer);
+    queueTranslationRefresh.timer = window.setTimeout(() => {
+      window.OrthodoxAccessibility?.refreshTranslation?.();
+    }, delay);
+  }
+
   function buildNavigation() {
     const source = window.ORTHODOX_BIBLE_NAVIGATION;
     if (!source) return;
@@ -210,6 +217,7 @@
 
     elements.bookSelect.value = entries[0]?.key || "";
     populatePartSelect(entries[0], null);
+    queueTranslationRefresh(40);
   }
 
   function getEntryByKey(key) {
@@ -247,6 +255,7 @@
     } else {
       elements.partSelect.value = "__book_start__";
     }
+    queueTranslationRefresh(70);
   }
 
   function findNavigationTarget(pageNumber) {
@@ -277,6 +286,7 @@
         localStorage.setItem("orthodoxBibleLocation", target.label);
       } catch (_) {}
     }
+    queueTranslationRefresh(90);
   }
 
   function navigateFromBookSelect() {
@@ -373,7 +383,7 @@
     } catch (error) {
       if (token !== state.renderToken) return;
       console.error(error);
-      setStatus("This part of the book could not be displayed.");
+      setStatus("This part of the Study Bible could not be displayed.");
       elements.spread.innerHTML = '<div class="page-loading">This page could not be displayed. Use another chapter shortcut or reload the reader.</div>';
     }
   }
@@ -472,7 +482,7 @@
     link.style.top = `${top}px`;
     link.style.width = `${width}px`;
     link.style.height = `${height}px`;
-    link.setAttribute("aria-label", annotation.url ? "Open linked website" : "Open linked page in the book");
+    link.setAttribute("aria-label", annotation.url ? "Open linked website" : "Open linked page in the Study Bible");
     link.title = annotation.url ? "Open linked website" : "Open linked page";
     link.addEventListener("pointerdown", (event) => event.stopPropagation());
 
@@ -611,6 +621,7 @@
       }
       offset += token.length;
     });
+    queueTranslationRefresh(90);
   }
 
   function showTextPanel(show = true) {
@@ -619,6 +630,7 @@
     elements.textPanelButton.setAttribute("aria-label", show ? "Hide accessible page text" : "Show accessible page text");
     elements.textPanelButton.title = show ? "Hide accessible text" : "Accessible text view";
     elements.textPanelButton.classList.toggle("is-active", show);
+    queueTranslationRefresh(70);
   }
 
   function toggleTextPanel() {
@@ -795,7 +807,7 @@
 
   async function initialise() {
     if (!window.pdfjsLib) {
-      setStatus("The book reader could not start.");
+      setStatus("The Study Bible reader could not start.");
       return;
     }
 
@@ -808,7 +820,7 @@
       loadingTask.onProgress = ({ loaded, total }) => {
         if (total) {
           const percent = Math.min(100, Math.round((loaded / total) * 100));
-          setStatus(`Loading the book, ${percent} percent.`);
+          setStatus(`Loading the Study Bible, ${percent} percent.`);
         }
       };
 
@@ -831,8 +843,8 @@
       setCurrentPage(1, { persist: false });
     } catch (error) {
       console.error(error);
-      setStatus("The book could not be opened.");
-      elements.spread.innerHTML = '<div class="page-loading">The book could not be opened. Please reload this page.</div>';
+      setStatus("The Study Bible could not be opened.");
+      elements.spread.innerHTML = '<div class="page-loading">The Study Bible could not be opened. Please reload this page.</div>';
     }
   }
 

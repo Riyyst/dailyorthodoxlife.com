@@ -10,10 +10,22 @@
   "description": "Daily Orthodox Life brings together Orthodox calendars, the Orthodox Study Bible, daily prayers, sacred chants and teaching.",
   "icons": [
     {
-      "src": "assets/orthodox-cover-logo.png",
-      "sizes": "any",
+      "src": "assets/app-icon-192.png",
+      "sizes": "192x192",
       "type": "image/png",
       "purpose": "any"
+    },
+    {
+      "src": "assets/app-icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "assets/app-icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
     }
   ],
   "categories": [

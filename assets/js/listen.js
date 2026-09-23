@@ -4,6 +4,10 @@
   const tracks = audioApi.tracks;
   const list = document.getElementById('track-list');
   const featured = document.getElementById('play-featured');
+  if (list) {
+    list.classList.add('notranslate');
+    list.setAttribute('translate', 'no');
+  }
   const playIcon = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 7.4 17.2 12 9 16.6Z" fill="currentColor" stroke="none"/></svg>';
   const pauseIcon = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 6h3v12H8zM13 6h3v12h-3z" fill="currentColor" stroke="none"/></svg>';
 
@@ -16,7 +20,6 @@
           <span class="oa-track-tradition">${track.tradition}</span>
         </span>
       </button>`).join('');
-    list.querySelectorAll('.oa-track').forEach(el => el.addEventListener('click', () => audioApi.start(Number(el.dataset.index))));
     highlight();
   }
 
@@ -32,10 +35,17 @@
   }
 
   window.addEventListener('orthodoxaudiochange', highlight);
-  featured?.addEventListener('click', () => {
-    if (typeof audioApi.shuffle === 'function') audioApi.shuffle();
-    else audioApi.start(Math.floor(Math.random() * tracks.length));
-  });
+  document.addEventListener('click', event => {
+    const track = event.target.closest?.('#track-list .oa-track');
+    if (track) {
+      audioApi.start(Number(track.dataset.index));
+      return;
+    }
+    if (event.target.closest?.('#play-featured')) {
+      if (typeof audioApi.shuffle === 'function') audioApi.shuffle();
+      else audioApi.start(Math.floor(Math.random() * tracks.length));
+    }
+  }, true);
 
   const tabs = [...document.querySelectorAll('[data-audio-tab]')];
   const panels = [...document.querySelectorAll('[data-audio-panel]')];

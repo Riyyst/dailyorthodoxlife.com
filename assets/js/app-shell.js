@@ -1,4 +1,7 @@
 (() => {
+  if (window.__dailyOrthodoxAppShellLoaded) return;
+  window.__dailyOrthodoxAppShellLoaded = true;
+
   const root = document.body.dataset.root || '';
   const appBaseUrl = new URL(root || './', window.location.href);
   const appUrl = path => new URL(path, appBaseUrl).href;
@@ -41,12 +44,373 @@
   footerHost.appendChild(footer);
 
   if ('serviceWorker' in navigator && location.protocol.startsWith('http')) {
-    window.addEventListener('load', () => navigator.serviceWorker.register(root + 'sw.js').catch(() => {}));
+    window.addEventListener('load', () => {
+      const registerWorker = () => navigator.serviceWorker.register(root + 'sw.js').catch(() => {});
+      if ('requestIdleCallback' in window) requestIdleCallback(registerWorker, { timeout: 2500 });
+      else setTimeout(registerWorker, 1200);
+    });
   }
 
+  /* Site-wide accessibility and language controls. Settings and language persist between pages. */
+  (() => {
+    const SETTINGS_KEY = 'dailyOrthodoxLifeAccessibilityV1';
+    const embedded = window.self !== window.top;
+    const supportedLanguages = [
+      ['en', 'English'], ['sq', 'Albanian'], ['ar', 'Arabic'], ['bg', 'Bulgarian'],
+      ['fr', 'French'], ['ka', 'Georgian'], ['de', 'German'], ['el', 'Greek'],
+      ['it', 'Italian'], ['pt', 'Portuguese'], ['ro', 'Romanian'], ['ru', 'Russian'],
+      ['sr', 'Serbian'], ['es', 'Spanish'], ['uk', 'Ukrainian']
+    ];
+    const supportedCodes = new Set(supportedLanguages.map(([code]) => code));
+
+    const deviceLanguage = () => {
+      const candidates = [
+        ...(Array.isArray(navigator.languages) ? navigator.languages : []),
+        navigator.language,
+        navigator.userLanguage
+      ].filter(Boolean);
+
+      for (const candidate of candidates) {
+        const code = String(candidate).toLowerCase().split('-')[0];
+        if (supportedCodes.has(code)) return code;
+      }
+      return 'en';
+    };
+
+    const defaultLanguage = deviceLanguage();
+    const defaults = {
+      fontScale: 1,
+      contrast: false,
+      reduceMotion: false,
+      underlineLinks: false,
+      language: defaultLanguage
+    };
+
+    const readSettings = () => {
+      try {
+        const stored = JSON.parse(localStorage.getItem(SETTINGS_KEY) || '{}');
+        const merged = { ...defaults, ...stored };
+        if (!supportedCodes.has(merged.language)) merged.language = defaultLanguage;
+        return merged;
+      } catch (_) {
+        return { ...defaults };
+      }
+    };
+
+    let settings = readSettings();
+
+    const saveSettings = () => {
+      try { localStorage.setItem(SETTINGS_KEY, JSON.stringify(settings)); } catch (_) {}
+    };
+
+    const applySettings = () => {
+      const scale = Math.max(.9, Math.min(1.3, Number(settings.fontScale) || 1));
+      document.documentElement.style.fontSize = `${16 * scale}px`;
+      document.body.classList.toggle('oa-a11y-contrast', Boolean(settings.contrast));
+      document.body.classList.toggle('oa-a11y-reduce-motion', Boolean(settings.reduceMotion));
+      document.body.classList.toggle('oa-a11y-underline-links', Boolean(settings.underlineLinks));
+      document.documentElement.lang = settings.language || defaultLanguage;
+    };
+    applySettings();
+
+    const writeTranslateCookie = language => {
+      const code = supportedCodes.has(language) ? language : defaultLanguage;
+      const value = code === 'en' ? '' : `/en/${code}`;
+      const expiry = code === 'en'
+        ? ';expires=Thu, 01 Jan 1970 00:00:00 GMT'
+        : ';max-age=31536000';
+
+      try {
+        document.cookie = `googtrans=${value};path=/${expiry};SameSite=Lax`;
+        if (location.hostname && location.hostname.includes('.')) {
+          const domain = location.hostname.replace(/^www\./, '');
+          document.cookie = `googtrans=${value};path=/;domain=.${domain}${expiry};SameSite=Lax`;
+        }
+      } catch (_) {}
+    };
+
+    let translateHost = document.getElementById('google_translate_element');
+    if (!translateHost) {
+      translateHost = document.createElement('div');
+      translateHost.id = 'google_translate_element';
+      translateHost.className = 'oa-google-translate-host notranslate';
+      translateHost.setAttribute('aria-hidden', 'true');
+      document.body.appendChild(translateHost);
+    }
+
+    const suppressTranslationChrome = () => {
+      document.documentElement.style.setProperty('top', '0px', 'important');
+      document.body?.style.setProperty('top', '0px', 'important');
+      document.querySelectorAll(
+        'iframe.goog-te-banner-frame, .goog-te-banner-frame, .VIpgJd-ZVi9od-ORHb-OEVmcd, .VIpgJd-ZVi9od-aZ2wEe-wOHMyf, .goog-te-balloon-frame'
+      ).forEach(el => {
+        el.style.setProperty('display', 'none', 'important');
+        el.style.setProperty('height', '0', 'important');
+        el.setAttribute('aria-hidden', 'true');
+      });
+    };
+
+    let translateScriptRequested = false;
+    let translateApplyTimer = null;
+    let lastAppliedLanguage = '';
+    let refreshTranslateTimer = null;
+
+    const applyGoogleTranslation = (attempt = 0, force = false) => {
+      if (!settings.language || settings.language === 'en') {
+        lastAppliedLanguage = 'en';
+        suppressTranslationChrome();
+        return;
+      }
+
+      const combo = document.querySelector('.goog-te-combo');
+      if (combo) {
+        const target = settings.language;
+        if (combo.value !== target) combo.value = target;
+
+        // Important: Google can initialise the dropdown from the googtrans cookie
+        // without translating the actual document. Fire one change event even
+        // when the dropdown already shows the target language.
+        if (force || lastAppliedLanguage !== target) {
+          lastAppliedLanguage = target;
+          combo.dispatchEvent(new Event('change', { bubbles: true }));
+        }
+
+        suppressTranslationChrome();
+
+        if (embedded) {
+          setTimeout(() => {
+            try { window.parent.postMessage({ type: 'orthodox-translation-ready' }, '*'); } catch (_) {}
+          }, 120);
+        }
+        return;
+      }
+
+      // Short, bounded retry only. Never run a long polling loop.
+      if (attempt < 12) {
+        clearTimeout(translateApplyTimer);
+        translateApplyTimer = setTimeout(() => applyGoogleTranslation(attempt + 1, force), 120);
+      } else if (embedded) {
+        try { window.parent.postMessage({ type: 'orthodox-translation-ready' }, '*'); } catch (_) {}
+      }
+    };
+
+    const loadGoogleTranslate = () => {
+      if (!settings.language || settings.language === 'en') {
+        writeTranslateCookie('en');
+        suppressTranslationChrome();
+        if (embedded) {
+          try { window.parent.postMessage({ type: 'orthodox-translation-ready' }, '*'); } catch (_) {}
+        }
+        return;
+      }
+
+      writeTranslateCookie(settings.language);
+
+      if (window.google?.translate?.TranslateElement) {
+        applyGoogleTranslation(0, true);
+        return;
+      }
+
+      if (translateScriptRequested || document.querySelector('script[data-dol-google-translate]')) {
+        translateScriptRequested = true;
+        return;
+      }
+
+      translateScriptRequested = true;
+      window.googleTranslateElementInit = () => {
+        try {
+          new window.google.translate.TranslateElement({
+            pageLanguage: 'en',
+            includedLanguages: supportedLanguages.map(x => x[0]).filter(x => x !== 'en').join(','),
+            autoDisplay: false
+          }, 'google_translate_element');
+
+          // One application pass after the widget exists. Force the change
+          // event once so a cookie-preselected dropdown still translates.
+          setTimeout(() => applyGoogleTranslation(0, true), 90);
+          setTimeout(suppressTranslationChrome, 350);
+        } catch (_) {
+          if (embedded) {
+            try { window.parent.postMessage({ type: 'orthodox-translation-ready' }, '*'); } catch (_) {}
+          }
+        }
+      };
+
+      const script = document.createElement('script');
+      script.dataset.dolGoogleTranslate = 'true';
+      script.src = 'https://translate.google.com/translate_a/element.js?cb=googleTranslateElementInit';
+      script.async = true;
+      script.defer = true;
+      script.onerror = () => {
+        translateScriptRequested = false;
+        if (embedded) {
+          try { window.parent.postMessage({ type: 'orthodox-translation-ready' }, '*'); } catch (_) {}
+        }
+      };
+      document.head.appendChild(script);
+    };
+
+    // Dynamic pages such as Prayers, Calendar and the Study Bible can insert
+    // content after Google's first pass. Use one debounced refresh, never a
+    // MutationObserver or repeated polling loop.
+    const refreshTranslation = () => {
+      if (!settings.language || settings.language === 'en') return;
+
+      clearTimeout(refreshTranslateTimer);
+      refreshTranslateTimer = setTimeout(() => {
+        if (!document.querySelector('.goog-te-combo')) {
+          loadGoogleTranslate();
+          return;
+        }
+        applyGoogleTranslation(0, true);
+      }, 220);
+    };
+
+    window.OrthodoxAccessibility = {
+      refreshTranslation,
+      get language() { return settings.language; }
+    };
+
+    // Embedded pages never create another accessibility control.
+    if (embedded) {
+      document.querySelectorAll('.oa-accessibility').forEach(el => el.remove());
+
+      if (settings.language && settings.language !== 'en') {
+        setTimeout(loadGoogleTranslate, 120);
+      } else {
+        try { window.parent.postMessage({ type: 'orthodox-translation-ready' }, '*'); } catch (_) {}
+      }
+      return;
+    }
+
+    // Guarantee one, and only one, accessibility control on every top-level page.
+    document.querySelectorAll('.oa-accessibility').forEach(el => el.remove());
+
+    const setLanguage = language => {
+      settings.language = supportedCodes.has(language) ? language : defaultLanguage;
+      saveSettings();
+      writeTranslateCookie(settings.language);
+      window.location.reload();
+    };
+
+    const shell = document.createElement('div');
+    shell.className = 'oa-accessibility notranslate';
+    shell.innerHTML = `
+      <button class="oa-accessibility-toggle" type="button" aria-label="Accessibility and language" aria-expanded="false">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="4.5" r="2.2"/><path d="M5 9h14M12 9v5M12 14l-4 6M12 14l4 6"/></svg>
+      </button>
+      <section class="oa-accessibility-panel" aria-label="Accessibility and language options" hidden>
+        <header><strong>Accessibility</strong><button class="oa-accessibility-close" type="button" aria-label="Close accessibility options">×</button></header>
+        <label class="oa-a11y-field"><span>Language</span><select data-a11y-language>${supportedLanguages.map(([code,name]) => `<option value="${code}">${name}</option>`).join('')}</select></label>
+        <label class="oa-a11y-field"><span>Text size</span><select data-a11y-font><option value="0.9">90%</option><option value="1">100%</option><option value="1.15">115%</option><option value="1.3">130%</option></select></label>
+        <label class="oa-a11y-switch"><span>High contrast</span><input type="checkbox" data-a11y-contrast /></label>
+        <label class="oa-a11y-switch"><span>Reduce motion</span><input type="checkbox" data-a11y-motion /></label>
+        <label class="oa-a11y-switch"><span>Underline links</span><input type="checkbox" data-a11y-links /></label>
+        <button class="oa-a11y-reset" type="button">Reset accessibility</button>
+      </section>`;
+    document.body.appendChild(shell);
+
+    const toggle = shell.querySelector('.oa-accessibility-toggle');
+    const panel = shell.querySelector('.oa-accessibility-panel');
+    const close = shell.querySelector('.oa-accessibility-close');
+    const language = shell.querySelector('[data-a11y-language]');
+    const font = shell.querySelector('[data-a11y-font]');
+    const contrast = shell.querySelector('[data-a11y-contrast]');
+    const motion = shell.querySelector('[data-a11y-motion]');
+    const links = shell.querySelector('[data-a11y-links]');
+    const reset = shell.querySelector('.oa-a11y-reset');
+
+    language.value = settings.language || defaultLanguage;
+    font.value = String(settings.fontScale || 1);
+    contrast.checked = Boolean(settings.contrast);
+    motion.checked = Boolean(settings.reduceMotion);
+    links.checked = Boolean(settings.underlineLinks);
+
+    const showPanel = show => {
+      panel.hidden = !show;
+      toggle.setAttribute('aria-expanded', String(show));
+      if (show) language.focus();
+    };
+
+    toggle.addEventListener('click', () => showPanel(panel.hidden));
+    close.addEventListener('click', () => showPanel(false));
+    document.addEventListener('keydown', event => {
+      if (event.key === 'Escape' && !panel.hidden) showPanel(false);
+    });
+
+    language.addEventListener('change', () => setLanguage(language.value));
+    font.addEventListener('change', () => {
+      settings.fontScale = Number(font.value);
+      saveSettings();
+      applySettings();
+    });
+    contrast.addEventListener('change', () => {
+      settings.contrast = contrast.checked;
+      saveSettings();
+      applySettings();
+    });
+    motion.addEventListener('change', () => {
+      settings.reduceMotion = motion.checked;
+      saveSettings();
+      applySettings();
+    });
+    links.addEventListener('change', () => {
+      settings.underlineLinks = links.checked;
+      saveSettings();
+      applySettings();
+    });
+    reset.addEventListener('click', () => {
+      const priorLanguage = settings.language;
+      settings = { ...defaults, language: defaultLanguage };
+      saveSettings();
+      writeTranslateCookie(settings.language);
+
+      if (priorLanguage !== settings.language) {
+        window.location.reload();
+        return;
+      }
+
+      applySettings();
+      language.value = settings.language;
+      font.value = '1';
+      contrast.checked = false;
+      motion.checked = false;
+      links.checked = false;
+    });
+
+    // Start translation only after all first-paint app work is complete.
+    // No overlay, no document-wide observer, and no forced retranslations.
+    if (settings.language && settings.language !== 'en') {
+      setTimeout(loadGoogleTranslate, 160);
+    } else {
+      writeTranslateCookie('en');
+    }
+
+    window.addEventListener('pageshow', () => {
+      settings = readSettings();
+      applySettings();
+      language.value = settings.language || defaultLanguage;
+
+      // BFCache can restore old DOM, so enforce exactly one control again.
+      document.querySelectorAll('.oa-accessibility').forEach((el, index) => {
+        if (index > 0) el.remove();
+      });
+
+      if (settings.language !== 'en') {
+        if (!document.querySelector('.goog-te-combo')) {
+          setTimeout(loadGoogleTranslate, 160);
+        } else {
+          lastAppliedLanguage = '';
+          setTimeout(() => applyGoogleTranslation(0, true), 60);
+        }
+      } else {
+        suppressTranslationChrome();
+      }
+    });
+  })();
   (() => {
     if (window.matchMedia('(prefers-reduced-motion: reduce)').matches || !('IntersectionObserver' in window)) return;
-    const targets = document.querySelectorAll('.oa-section-head, .oa-quick-grid, .oa-card-row, .oa-feature-grid, .oa-calendar-choice-grid, .oa-prayer-grid, .oa-track-list, .oa-recorded-empty, .liturgical-masthead, body.app-calendar-page .today-section, body.app-calendar-page .right-panel > section');
+    const targets = document.querySelectorAll('.oa-section-head, .oa-quick-grid, .oa-card-row, .oa-feature-grid, .oa-calendar-choice-grid, .oa-track-list, .oa-recorded-empty, .liturgical-masthead, body.app-calendar-page .today-section, body.app-calendar-page .right-panel > section');
     targets.forEach(el => el.classList.add('oa-reveal'));
     const observer = new IntersectionObserver(entries => {
       entries.forEach(entry => {
@@ -61,14 +425,24 @@
   /* Shared audio player. It restores the same track and playback position after normal page navigation. */
   const tracks = [
     {title:'Agni Parthene', tradition:'Greek', meta:'Greek Orthodox chant', src:'greek/greek-assets/music/Agni Parthene.mp3'},
+    {title:'Christos Anesti', tradition:'Greek', meta:'Greek Orthodox chant', src:'greek/greek-assets/music/Christos Anesti.mp3'},
     {title:'Come on people', tradition:'Greek', meta:'Greek Orthodox chant', src:'greek/greek-assets/music/Come on people.mp3'},
+    {title:'Lament for Constantinople', tradition:'Greek', meta:'Greek Orthodox chant', src:'greek/greek-assets/music/Lament for Constantinople.mp3'},
+    {title:'Lord Save Your People', tradition:'Greek', meta:'Greek Orthodox chant', src:'greek/greek-assets/music/Lord Save Your People.mp3'},
     {title:'Praise the Lord from the Heavens', tradition:'Greek', meta:'Greek Orthodox chant', src:'greek/greek-assets/music/Praise the Lord from the Heavens.mp3'},
-    {title:'Psalm 135', tradition:'Greek', meta:'Greek Orthodox chant', src:'greek/greek-assets/music/Psalm 135.mp3'},
+    {title:'Psalm 49', tradition:'Greek', meta:'Greek Orthodox chant', src:'greek/greek-assets/music/Psalm 49.mp3'},
     {title:'Psalm 50', tradition:'Greek', meta:'Greek Orthodox chant', src:'greek/greek-assets/music/Psalm 50.mp3'},
+    {title:'Psalm 90 & 91', tradition:'Greek', meta:'Greek Orthodox chant', src:'greek/greek-assets/music/Psalm 90 & 91.mp3'},
+    {title:'Psalm 135', tradition:'Greek', meta:'Greek Orthodox chant', src:'greek/greek-assets/music/Psalm 135.mp3'},
     {title:'Belisarius', tradition:'Russian', meta:'Russian Orthodox chant', src:'russian/russian-assets/music/Belisarius.mp3'},
+    {title:'Cherubic Hymn', tradition:'Russian', meta:'Russian Orthodox chant', src:'russian/russian-assets/music/Cherubic Hymn.mp3'},
     {title:'Hymn of the Cherubim', tradition:'Russian', meta:'Russian Orthodox chant', src:'russian/russian-assets/music/Hymn of the Cherubim.mp3'},
     {title:'Lord, I have cried unto Thee', tradition:'Russian', meta:'Russian Orthodox chant', src:'russian/russian-assets/music/Lord, I have cried unto Thee.mp3'},
+    {title:'May my prayer be set forth', tradition:'Russian', meta:'Russian Orthodox chant', src:'russian/russian-assets/music/May my prayer be set forth.mp3'},
     {title:'My Sinful Soul', tradition:'Russian', meta:'Russian Orthodox chant', src:'russian/russian-assets/music/My Sinful Soul.mp3'},
+    {title:'Open to me the doors of repentance', tradition:'Russian', meta:'Russian Orthodox chant', src:'russian/russian-assets/music/Open to me the doors of repentance.mp3'},
+    {title:'That We May Receive the King', tradition:'Russian', meta:'Russian Orthodox chant', src:'russian/russian-assets/music/That We May Receive the King.mp3'},
+    {title:'We bow down before Your Cross', tradition:'Russian', meta:'Russian Orthodox chant', src:'russian/russian-assets/music/We bow down before Your Cross.mp3'},
     {title:'We Praise Thee', tradition:'Russian', meta:'Russian Orthodox chant', src:'russian/russian-assets/music/We Praise Thee.mp3'}
   ];
 
@@ -123,12 +497,13 @@
     return;
   }
 
-  const STORAGE_KEY = 'orthodoxAudioStateV1';
+  const STORAGE_KEY = 'orthodoxAudioStateV2';
   const playIcon = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 7.4 17.2 12 9 16.6Z" fill="currentColor" stroke="none"/></svg>';
   const pauseIcon = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 6h3v12H8zM13 6h3v12h-3z" fill="currentColor" stroke="none"/></svg>';
   const previousIcon = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 5v14M18 6l-8 6 8 6z"/></svg>';
   const nextIcon = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M18 5v14M6 6l8 6-8 6z"/></svg>';
   const stopwatchIcon = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 2h6M12 5v2M17.5 6.5l1.5-1.5M12 7a7 7 0 1 1-7 7 7 7 0 0 1 7-7z"/><path d="M12 10v4l2.5 1.5"/></svg>';
+  const minimiseIcon = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>';
   const fmt = seconds => {
     if (!Number.isFinite(seconds)) return '0:00';
     const m = Math.floor(seconds / 60);
@@ -144,11 +519,14 @@
     document.body.appendChild(audio);
   }
 
+  audio.classList.add('notranslate');
+  audio.setAttribute('translate', 'no');
+
   let player = document.getElementById('audio-player');
   if (!player) {
     player = document.createElement('div');
     player.id = 'audio-player';
-    player.className = 'oa-player oa-global-player';
+    player.className = 'oa-player oa-global-player notranslate';
     player.innerHTML = `
       <div class="oa-player-meta"><strong id="audio-player-title">Sacred audio</strong><span id="audio-player-meta">Select a recording</span></div>
       <div class="oa-player-controls">
@@ -163,6 +541,7 @@
           <button id="audio-volume-up" class="oa-volume-step" type="button" aria-label="Raise volume">+</button>
         </div>
         <button id="audio-sleep-timer" class="oa-player-timer" type="button" aria-label="Set sleep timer" aria-expanded="false">${stopwatchIcon}<span id="audio-sleep-timer-badge" aria-hidden="true"></span></button>
+        <button id="audio-player-minimise" class="oa-player-minimise" type="button" aria-label="Minimise audio player" aria-expanded="true">${minimiseIcon}</button>
         <button id="audio-player-close" class="oa-player-close" type="button" aria-label="Close audio player">×</button>
         <div id="audio-sleep-panel" class="oa-sleep-panel" hidden>
           <strong>Sleep timer</strong>
@@ -216,6 +595,18 @@
     }
     tools.appendChild(timer);
 
+    let minimise = player.querySelector('#audio-player-minimise');
+    if (!minimise) {
+      minimise = document.createElement('button');
+      minimise.id = 'audio-player-minimise';
+      minimise.className = 'oa-player-minimise';
+      minimise.type = 'button';
+      minimise.setAttribute('aria-label', 'Minimise audio player');
+      minimise.setAttribute('aria-expanded', 'true');
+      minimise.innerHTML = minimiseIcon;
+    }
+    tools.appendChild(minimise);
+
     let close = player.querySelector('#audio-player-close');
     if (!close) {
       close = document.createElement('button');
@@ -253,6 +644,9 @@
     tools.appendChild(panel);
   }
 
+  player.classList.add('notranslate');
+  player.setAttribute('translate', 'no');
+
   const ui = {
     title: player.querySelector('#audio-player-title'),
     meta: player.querySelector('#audio-player-meta'),
@@ -264,6 +658,7 @@
     volumeDown: player.querySelector('#audio-volume-down'),
     volumeUp: player.querySelector('#audio-volume-up'),
     timer: player.querySelector('#audio-sleep-timer'),
+    minimise: player.querySelector('#audio-player-minimise'),
     timerBadge: player.querySelector('#audio-sleep-timer-badge'),
     sleepPanel: player.querySelector('#audio-sleep-panel'),
     sleepCustom: player.querySelector('#audio-sleep-custom'),
@@ -311,6 +706,7 @@
       shuffle: shuffleMode,
       sleepTimerEnd: sleepTimerEnd || 0,
       volume: userVolume,
+      minimized: player.classList.contains('is-minimized'),
       updatedAt: now,
       closed: false
     };
@@ -351,6 +747,7 @@
     ui.meta.textContent = track.meta;
     audio.src = appUrl(track.src);
     player.classList.add('is-visible');
+    player.setAttribute('aria-hidden', 'false');
     setMediaSession(track);
 
     const seekTo = Math.max(0, Number(options.currentTime) || 0);
@@ -523,6 +920,28 @@
     if (ui.timer) ui.timer.setAttribute('aria-expanded', 'false');
   }
 
+  function setPlayerMinimized(minimized, shouldPersist = true) {
+    const value = Boolean(minimized);
+    player.classList.toggle('is-minimized', value);
+
+    if (ui.minimise) {
+      ui.minimise.setAttribute('aria-expanded', String(!value));
+      ui.minimise.setAttribute('aria-label', value ? 'Expand audio player' : 'Minimise audio player');
+      ui.minimise.title = value ? 'Expand player' : 'Minimise player';
+    }
+
+    if (value && ui.sleepPanel && !ui.sleepPanel.hidden) {
+      ui.sleepPanel.hidden = true;
+      ui.timer?.setAttribute('aria-expanded', 'false');
+    }
+
+    if (shouldPersist) persist(true);
+  }
+
+  function togglePlayerMinimized() {
+    setPlayerMinimized(!player.classList.contains('is-minimized'));
+  }
+
   function closePlayer() {
     clearSleepTimer({ persist: false, restoreVolume: false });
     desiredPlaying = false;
@@ -530,7 +949,13 @@
     audio.removeAttribute('src');
     audio.load();
     index = -1;
+
+    // Remove the compact-state class first so its positioning rules can never
+    // keep the shell visible after the close button is pressed.
+    player.classList.remove('is-minimized');
     player.classList.remove('is-visible');
+    player.setAttribute('aria-hidden', 'true');
+
     clearState();
     dispatch();
   }
@@ -538,6 +963,7 @@
   ui.play?.addEventListener('click', toggle);
   ui.prev?.addEventListener('click', previousTrack);
   ui.next?.addEventListener('click', nextTrack);
+  ui.minimise?.addEventListener('click', togglePlayerMinimized);
   ui.close?.addEventListener('click', closePlayer);
   ui.volume?.addEventListener('input', () => setUserVolume(ui.volume.value));
   ui.volumeDown?.addEventListener('click', () => changeVolume(-0.1));
@@ -628,9 +1054,12 @@
 
     if (!persistentFrame) {
       persistentFrame = document.createElement('iframe');
-      persistentFrame.className = 'oa-persistent-frame';
+      persistentFrame.className = 'oa-persistent-frame is-loading';
       persistentFrame.title = 'Daily Orthodox Life';
       persistentFrame.setAttribute('allow', 'autoplay');
+      persistentFrame.addEventListener('load', () => {
+        persistentFrame?.classList.remove('is-loading');
+      });
       document.body.appendChild(persistentFrame);
       document.documentElement.classList.add('oa-persistent-audio-shell');
     }
@@ -638,7 +1067,12 @@
     if (pushHistory && window.location.href !== target.href) {
       try { history.pushState({ orthodoxPersistentRoute: target.href }, '', target.href); } catch (_) {}
     }
-    if (persistentFrame.src !== target.href) persistentFrame.src = target.href;
+    if (persistentFrame.src !== target.href) {
+      persistentFrame.classList.add('is-loading');
+      persistentFrame.src = target.href;
+      window.clearTimeout(persistentFrame._dolRevealTimer);
+      persistentFrame._dolRevealTimer = window.setTimeout(() => persistentFrame?.classList.remove('is-loading'), 6000);
+    }
     window.scrollTo(0, 0);
   }
 
@@ -661,6 +1095,11 @@
 
   window.addEventListener('message', event => {
     const data = event.data || {};
+
+    if (data.type === 'orthodox-translation-ready') {
+      persistentFrame?.classList.remove('is-loading');
+      return;
+    }
 
     if (data.type === 'orthodox-route' && typeof data.href === 'string') {
       openPersistentRoute(data.href, true);
@@ -727,6 +1166,8 @@
   } else {
     updateSleepTimerUi();
   }
+
+  if (restored) setPlayerMinimized(Boolean(restored.minimized), false);
 
   if (restored && Number.isInteger(restored.index) && restored.index >= 0 && restored.index < tracks.length) {
     setTrack(restored.index, {

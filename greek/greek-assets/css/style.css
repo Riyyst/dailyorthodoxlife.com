@@ -1208,3 +1208,17 @@ body {
     margin-left: 0.75rem;
   }
 }
+
+
+/* Mk19, explicit fasting restrictions. */
+.fast-rule-summary,
+.fast-rule-allowance,
+.fast-rule-source {
+  margin: .28rem 0 0;
+  color: var(--ink-soft);
+  font-size: .84rem;
+  line-height: 1.5;
+}
+.fast-rule-summary { color: var(--ink-main); font-weight: 600; }
+.fast-rule-source { font-style: italic; opacity: .84; }
+
