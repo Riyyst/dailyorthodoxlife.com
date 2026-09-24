@@ -646,6 +646,10 @@
     let sleepTimeout = null;
     let sleepTicker = null;
     let fadeInterval = null;
+    let fadeStopTimeout = null;
+    let audioContext = null;
+    let mediaSourceNode = null;
+    let fadeGainNode = null;
     let persistentFrame = null;
     let backgroundPlaylist = null;
     let backgroundPosition = 0;
@@ -728,6 +732,34 @@
       } catch (_) {}
     }
 
+    function updateMediaSessionPosition(trackIndex = index, position = null) {
+      if (!('mediaSession' in navigator) || typeof navigator.mediaSession.setPositionState !== 'function') return;
+      if (!Number.isInteger(trackIndex) || trackIndex < 0 || trackIndex >= trackDurations.length) return;
+
+      const duration = Number(trackDurations[trackIndex]);
+      if (!Number.isFinite(duration) || duration <= 0) return;
+
+      let current = Number(position);
+      if (!Number.isFinite(current)) {
+        if (backgroundPlaylist) {
+          const info = backgroundTrackInfo();
+          current = info ? info.offset : 0;
+        } else {
+          current = Number.isFinite(audio.currentTime) ? audio.currentTime : 0;
+        }
+      }
+
+      current = Math.max(0, Math.min(current, Math.max(0, duration - 0.05)));
+
+      try {
+        navigator.mediaSession.setPositionState({
+          duration,
+          playbackRate: Number.isFinite(audio.playbackRate) && audio.playbackRate > 0 ? audio.playbackRate : 1,
+          position: current
+        });
+      } catch (_) {}
+    }
+
     function updateTrackUi(trackIndex) {
       index = trackIndex;
       const track = tracks[index];
@@ -735,6 +767,7 @@
       ui.title.textContent = track.title;
       ui.meta.textContent = track.meta;
       setMediaSession(track);
+      updateMediaSessionPosition(trackIndex, 0);
       dispatch();
     }
 
@@ -753,6 +786,7 @@
 
       index = (Number(nextIndex) + tracks.length) % tracks.length;
       const track = tracks[index];
+      resetFadeGain();
       updateTrackUi(index);
       showPlayer();
 
@@ -834,6 +868,38 @@
       setUserVolume(Math.round((userVolume + delta) * 20) / 20);
     }
 
+    function ensureFadeAudioGraph() {
+      const AudioCtx = window.AudioContext || window.webkitAudioContext;
+      if (!AudioCtx) return false;
+
+      try {
+        if (!audioContext) {
+          audioContext = new AudioCtx();
+          mediaSourceNode = audioContext.createMediaElementSource(audio);
+          fadeGainNode = audioContext.createGain();
+          fadeGainNode.gain.value = 1;
+          mediaSourceNode.connect(fadeGainNode);
+          fadeGainNode.connect(audioContext.destination);
+        }
+
+        if (audioContext.state === 'suspended') {
+          audioContext.resume().catch(() => {});
+        }
+        return Boolean(fadeGainNode);
+      } catch (_) {
+        return false;
+      }
+    }
+
+    function resetFadeGain() {
+      if (!fadeGainNode || !audioContext) return;
+      try {
+        const now = audioContext.currentTime;
+        fadeGainNode.gain.cancelScheduledValues(now);
+        fadeGainNode.gain.setValueAtTime(1, now);
+      } catch (_) {}
+    }
+
     function formatRemaining(ms) {
       const mins = Math.max(1, Math.ceil(ms / 60000));
       if (mins >= 60) {
@@ -856,8 +922,10 @@
       clearTimeout(sleepTimeout);
       clearInterval(sleepTicker);
       clearInterval(fadeInterval);
-      sleepTimeout = sleepTicker = fadeInterval = null;
+      clearTimeout(fadeStopTimeout);
+      sleepTimeout = sleepTicker = fadeInterval = fadeStopTimeout = null;
       sleepTimerEnd = 0;
+      resetFadeGain();
       if (restoreVolume && !isIOS) audio.volume = userVolume;
       updateSleepUi();
       if (persistState) persist(true);
@@ -866,23 +934,34 @@
     function finishSleepTimer() {
       clearTimeout(sleepTimeout);
       clearInterval(sleepTicker);
-      sleepTimeout = sleepTicker = null;
+      clearInterval(fadeInterval);
+      clearTimeout(fadeStopTimeout);
+      sleepTimeout = sleepTicker = fadeInterval = fadeStopTimeout = null;
 
       const fadeMs = 30000;
-      const started = performance.now();
-      const startVolume = isIOS ? 1 : audio.volume;
+      const hasGain = ensureFadeAudioGraph();
 
-      clearInterval(fadeInterval);
-      fadeInterval = setInterval(() => {
-        const p = Math.min(1, (performance.now() - started) / fadeMs);
-        const eased = p * p * (3 - 2 * p);
-        if (!isIOS) audio.volume = startVolume * Math.max(0, 1 - eased);
-        if (p >= 1) {
-          clearInterval(fadeInterval);
-          fadeInterval = null;
-          setTimeout(() => closePlayer(), 250);
-        }
-      }, 200);
+      if (hasGain && audioContext && fadeGainNode) {
+        try {
+          const now = audioContext.currentTime;
+          fadeGainNode.gain.cancelScheduledValues(now);
+          fadeGainNode.gain.setValueAtTime(Math.max(0.0001, fadeGainNode.gain.value || 1), now);
+          fadeGainNode.gain.linearRampToValueAtTime(0.0001, now + (fadeMs / 1000));
+        } catch (_) {}
+      } else {
+        const started = performance.now();
+        const startVolume = audio.volume;
+        fadeInterval = setInterval(() => {
+          const p = Math.min(1, (performance.now() - started) / fadeMs);
+          const eased = p * p * (3 - 2 * p);
+          try { audio.volume = startVolume * Math.max(0, 1 - eased); } catch (_) {}
+        }, 200);
+      }
+
+      fadeStopTimeout = setTimeout(() => {
+        fadeStopTimeout = null;
+        closePlayer();
+      }, fadeMs + 350);
     }
 
     function armSleepTimer(endTime) {
@@ -899,6 +978,8 @@
     function setSleepMinutes(minutes) {
       const mins = Math.max(1, Math.min(480, Math.round(Number(minutes) || 0)));
       if (!mins) return;
+      ensureFadeAudioGraph();
+      resetFadeGain();
       armSleepTimer(Date.now() + mins * 60000);
       if (ui.sleepPanel) ui.sleepPanel.hidden = true;
       ui.timer?.setAttribute('aria-expanded','false');
@@ -966,6 +1047,7 @@
       const begin = () => {
         try { audio.currentTime = Math.max(0, offset); } catch (_) {}
         backgroundSwitching = false;
+        updateMediaSessionPosition(index, offset);
         if (wasPlaying) audio.play().catch(() => {});
       };
       if (audio.readyState >= 1) begin();
@@ -1061,12 +1143,14 @@
           if (ui.scrub) ui.scrub.value = String(Math.max(0,Math.min(100,pct)));
           if (ui.current) ui.current.textContent = fmt(info.offset);
           if (ui.duration) ui.duration.textContent = fmt(info.duration);
+          updateMediaSessionPosition(info.trackIndex, info.offset);
         }
       } else {
         if (ui.scrub) ui.scrub.value = audio.duration ? String((audio.currentTime / audio.duration) * 100) : '0';
         if (ui.current) ui.current.textContent = fmt(audio.currentTime);
         const d = Number.isFinite(audio.duration) && audio.duration > 0 ? audio.duration : trackDurations[index];
         if (ui.duration) ui.duration.textContent = fmt(d);
+        updateMediaSessionPosition(index, audio.currentTime);
       }
 
       if (sleepTimerEnd && Date.now() >= sleepTimerEnd && !fadeInterval) finishSleepTimer();

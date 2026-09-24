@@ -6355,3 +6355,59 @@ body.app-calendar-page .oa-accessibility-row {
     right: 8px !important;
   }
 }
+
+
+/* =========================================================
+   Mk34, player close + Bible accessibility
+   ========================================================= */
+
+/* Anchor the X to the outer shell, not the positioned tools group. */
+.oa-player.is-visible:not(.is-minimized) .oa-player-tools {
+  position: static !important;
+  padding-right: 34px !important;
+}
+
+.oa-player.is-visible:not(.is-minimized) .oa-player-close {
+  position: absolute !important;
+  inset: 8px 9px auto auto !important;
+  top: 8px !important;
+  right: 9px !important;
+  z-index: 30 !important;
+  margin: 0 !important;
+  transform: none !important;
+}
+
+/* Only the current framed page should show accessibility while persistent
+   audio navigation is active. The old parent page must show none. */
+html.oa-persistent-audio-shell .oa-accessibility {
+  display: none !important;
+}
+
+/* Bible accessibility stays in its own normal-flow row above the Bible header. */
+body.app-bible-page .oa-accessibility-row {
+  position: relative !important;
+  z-index: auto !important;
+  min-height: 50px !important;
+  margin: 0 0 8px !important;
+}
+
+body.app-bible-page .oa-accessibility-row > .oa-accessibility {
+  display: block !important;
+  position: relative !important;
+  top: auto !important;
+  right: auto !important;
+  z-index: 2 !important;
+}
+
+@media (max-width: 760px) {
+  .oa-player.is-visible:not(.is-minimized) .oa-player-close {
+    inset: 7px 8px auto auto !important;
+    top: 7px !important;
+    right: 8px !important;
+  }
+
+  body.app-bible-page .oa-accessibility-row {
+    min-height: 48px !important;
+    margin-bottom: 8px !important;
+  }
+}
