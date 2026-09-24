@@ -830,16 +830,77 @@
     }
 
     function start(i) { setTrack(i, { currentTime:0, play:true, shuffle:false }); }
-    function startRandom() { setTrack(randomIndex(index), { currentTime:0, play:true, shuffle:true }); }
+
+    function startNativeShuffle(firstIndex) {
+      if (!isIOS || !audio.canPlayType('application/vnd.apple.mpegurl')) return false;
+
+      const playlist = playlistForTrack(firstIndex);
+      if (!playlist) return false;
+
+      shuffleMode = true;
+      backgroundPlaylist = playlist;
+      backgroundPosition = 0;
+      backgroundSwitching = false;
+      index = firstIndex;
+
+      resetFadeGain();
+      updateTrackUi(index);
+      showPlayer();
+
+      audio.preload = 'auto';
+      audio.src = appUrl(playlist.src);
+
+      // Do not wait for loadedmetadata. This call is still within the user's
+      // tap/click gesture, so Safari can begin native HLS playback immediately.
+      desiredPlaying = true;
+      audio.play().catch(() => {
+        desiredPlaying = false;
+        if (ui.play) ui.play.innerHTML = playIcon;
+        dispatch();
+      });
+
+      updateMediaSessionPosition(index, 0);
+      persist(true);
+      dispatch();
+      return true;
+    }
+
+    function startRandom() {
+      const first = randomIndex(index);
+      if (startNativeShuffle(first)) return;
+      setTrack(first, { currentTime:0, play:true, shuffle:true });
+    }
 
     function nextTrack() {
-      if (backgroundPlaylist) return;
+      if (backgroundPlaylist) {
+        const nextPos = (backgroundPosition + 1) % backgroundPlaylist.order.length;
+        backgroundPosition = nextPos;
+        const nextIndex = backgroundPlaylist.order[nextPos];
+        index = nextIndex;
+        updateTrackUi(nextIndex);
+        try { audio.currentTime = backgroundPlaylist.starts[nextPos]; } catch (_) {}
+        updateMediaSessionPosition(nextIndex, 0);
+        audio.play().catch(() => {});
+        persist(true);
+        return;
+      }
       if (shuffleMode) startRandom();
       else start(index >= tracks.length - 1 ? 0 : index + 1);
     }
 
     function previousTrack() {
-      if (backgroundPlaylist) return;
+      if (backgroundPlaylist) {
+        const previousPos = Math.max(0, backgroundPosition - 1);
+        backgroundPosition = previousPos;
+        const previousIndex = backgroundPlaylist.order[previousPos];
+        index = previousIndex;
+        updateTrackUi(previousIndex);
+        try { audio.currentTime = backgroundPlaylist.starts[previousPos]; } catch (_) {}
+        updateMediaSessionPosition(previousIndex, 0);
+        audio.play().catch(() => {});
+        persist(true);
+        return;
+      }
       if (shuffleMode) startRandom();
       else start(index <= 0 ? tracks.length - 1 : index - 1);
     }
@@ -1184,9 +1245,14 @@
       } else nextTrack();
     });
 
+    // Shuffle on iPhone already uses the native continuous playlist while the
+    // app is visible, so locking/unlocking the phone does not require a source
+    // swap and therefore does not interrupt the chant.
     document.addEventListener('visibilitychange', () => {
-      if (document.hidden) enterBackgroundShuffle();
-      else leaveBackgroundShuffle();
+      if (!document.hidden && backgroundPlaylist) {
+        updateBackgroundTrack();
+        updateMediaSessionPosition();
+      }
     });
 
     function isInternalAppPage(target) {
@@ -1286,12 +1352,56 @@
     if (restored) setMinimized(Boolean(restored.minimized), false);
 
     if (restored && Number.isInteger(restored.index) && restored.index >= 0 && restored.index < tracks.length) {
-      setTrack(restored.index, {
-        currentTime:Number(restored.currentTime) || 0,
-        play:Boolean(restored.playing),
-        shuffle:Boolean(restored.shuffle)
-      });
+      if (restored.shuffle && isIOS && audio.canPlayType('application/vnd.apple.mpegurl')) {
+        const playlist = playlistForTrack(restored.index);
+        if (playlist) {
+          shuffleMode = true;
+          backgroundPlaylist = playlist;
+          backgroundPosition = 0;
+          index = restored.index;
+          resetFadeGain();
+          updateTrackUi(index);
+          showPlayer();
+
+          const offset = Math.max(0, Number(restored.currentTime) || 0);
+          audio.preload = 'auto';
+          audio.src = appUrl(playlist.src);
+
+          const resume = () => {
+            try { audio.currentTime = offset; } catch (_) {}
+            if (restored.playing) {
+              desiredPlaying = true;
+              audio.play().catch(() => {});
+            }
+            updateMediaSessionPosition(index, offset);
+          };
+
+          if (audio.readyState >= 1) resume();
+          else audio.addEventListener('loadedmetadata', resume, { once:true });
+        } else {
+          setTrack(restored.index, {
+            currentTime:Number(restored.currentTime) || 0,
+            play:Boolean(restored.playing),
+            shuffle:true
+          });
+        }
+      } else {
+        setTrack(restored.index, {
+          currentTime:Number(restored.currentTime) || 0,
+          play:Boolean(restored.playing),
+          shuffle:Boolean(restored.shuffle)
+        });
+      }
     }
+
+    const prefetchShuffleManifests = () => {
+      if (!isIOS) return;
+      backgroundPlaylists.forEach(playlist => {
+        fetch(appUrl(playlist.src), { cache:'force-cache' }).catch(() => {});
+      });
+    };
+    if ('requestIdleCallback' in window) requestIdleCallback(prefetchShuffleManifests, { timeout:1800 });
+    else setTimeout(prefetchShuffleManifests, 900);
 
     window.OrthodoxAudio = {
       tracks,

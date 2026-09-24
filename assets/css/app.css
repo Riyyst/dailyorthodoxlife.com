@@ -6411,3 +6411,31 @@ body.app-bible-page .oa-accessibility-row > .oa-accessibility {
     margin-bottom: 8px !important;
   }
 }
+
+
+/* =========================================================
+   Mk35, final mobile media controls
+   ========================================================= */
+
+@media (max-width: 760px) {
+  .oa-player.is-visible:not(.is-minimized) .oa-player-minimise {
+    position: absolute !important;
+    top: 7px !important;
+    right: 43px !important;
+    z-index: 30 !important;
+    width: 28px !important;
+    height: 28px !important;
+    min-width: 28px !important;
+    min-height: 28px !important;
+    margin: 0 !important;
+  }
+
+  .oa-player.is-visible:not(.is-minimized) .oa-player-close {
+    top: 7px !important;
+    right: 8px !important;
+  }
+
+  .oa-player.is-visible:not(.is-minimized) .oa-player-meta {
+    padding-right: 78px !important;
+  }
+}
