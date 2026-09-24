@@ -6439,3 +6439,108 @@ body.app-bible-page .oa-accessibility-row > .oa-accessibility {
     padding-right: 78px !important;
   }
 }
+
+
+/* =========================================================
+   Mk36, sleep timer + tighter mobile expanded shell
+   ========================================================= */
+
+/* iOS already uses the hardware volume controls. The explanatory text is not
+   needed in the player. */
+.oa-player.oa-ios-player:not(.is-minimized) .oa-player-tools::before {
+  content: none !important;
+  display: none !important;
+}
+
+@media (max-width: 760px) {
+  .oa-player.is-visible:not(.is-minimized) {
+    padding: 10px 12px 9px !important;
+    row-gap: 7px !important;
+  }
+
+  /* Timer, minimise and close all live on the title row. */
+  .oa-player.is-visible:not(.is-minimized) .oa-player-tools {
+    grid-row: 1 !important;
+    height: 0 !important;
+    min-height: 0 !important;
+    padding: 0 !important;
+    margin: 0 !important;
+  }
+
+  .oa-player.is-visible:not(.is-minimized) .oa-player-timer {
+    position: absolute !important;
+    top: 7px !important;
+    right: 78px !important;
+    z-index: 31 !important;
+    width: 28px !important;
+    height: 28px !important;
+    min-width: 28px !important;
+    min-height: 28px !important;
+    margin: 0 !important;
+  }
+
+  .oa-player.is-visible:not(.is-minimized) .oa-player-minimise {
+    position: absolute !important;
+    top: 7px !important;
+    right: 43px !important;
+    z-index: 31 !important;
+    width: 28px !important;
+    height: 28px !important;
+    min-width: 28px !important;
+    min-height: 28px !important;
+    margin: 0 !important;
+  }
+
+  .oa-player.is-visible:not(.is-minimized) .oa-player-close {
+    top: 7px !important;
+    right: 8px !important;
+  }
+
+  /* The active timer value, e.g. 1m, sits immediately under the stopwatch. */
+  .oa-player.is-visible:not(.is-minimized) #audio-sleep-timer-badge,
+  .oa-player.is-visible:not(.is-minimized) .oa-player-timer-badge {
+    display: block !important;
+    position: absolute !important;
+    top: 25px !important;
+    left: 50% !important;
+    right: auto !important;
+    transform: translateX(-50%) !important;
+    min-width: max-content !important;
+    color: #e5bb6e !important;
+    font-size: .52rem !important;
+    line-height: 1 !important;
+  }
+
+  .oa-player.is-visible:not(.is-minimized) .oa-player-meta {
+    padding-right: 112px !important;
+  }
+
+  .oa-player.is-visible:not(.is-minimized) .oa-player-controls {
+    grid-row: 2 !important;
+    margin-top: 1px !important;
+  }
+
+  .oa-player.is-visible:not(.is-minimized) .oa-player-progress {
+    grid-row: 3 !important;
+  }
+
+  .oa-player.is-visible:not(.is-minimized) .oa-sleep-panel {
+    right: 70px !important;
+    bottom: calc(100% + 8px) !important;
+    transform: none !important;
+  }
+}
+
+@media (max-width: 390px) {
+  .oa-player.is-visible:not(.is-minimized) .oa-player-meta {
+    padding-right: 105px !important;
+  }
+
+  .oa-player.is-visible:not(.is-minimized) .oa-player-timer {
+    right: 74px !important;
+  }
+
+  .oa-player.is-visible:not(.is-minimized) .oa-player-minimise {
+    right: 41px !important;
+  }
+}

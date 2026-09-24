@@ -647,6 +647,8 @@
     let sleepTicker = null;
     let fadeInterval = null;
     let fadeStopTimeout = null;
+    let fadeScheduled = false;
+    let sleepStopAt = 0;
     let audioContext = null;
     let mediaSourceNode = null;
     let fadeGainNode = null;
@@ -701,6 +703,7 @@
         minimized: player.classList.contains('is-minimized'),
         volume: userVolume,
         sleepTimerEnd,
+        sleepStopAt,
         updatedAt: now
       };
       try { sessionStorage.setItem(STORAGE_KEY, JSON.stringify(state)); } catch (_) {}
@@ -986,52 +989,105 @@
       clearTimeout(fadeStopTimeout);
       sleepTimeout = sleepTicker = fadeInterval = fadeStopTimeout = null;
       sleepTimerEnd = 0;
+      sleepStopAt = 0;
+      fadeScheduled = false;
       resetFadeGain();
       if (restoreVolume && !isIOS) audio.volume = userVolume;
       updateSleepUi();
       if (persistState) persist(true);
     }
 
+    const SLEEP_FADE_MS = 10000;
+
+    function scheduleAudioClockFade(delayMs = 0) {
+      if (!ensureFadeAudioGraph() || !audioContext || !fadeGainNode) return false;
+
+      try {
+        const now = audioContext.currentTime;
+        const fadeStart = now + Math.max(0, Number(delayMs) || 0) / 1000;
+        const fadeEnd = fadeStart + (SLEEP_FADE_MS / 1000);
+
+        fadeGainNode.gain.cancelScheduledValues(now);
+        fadeGainNode.gain.setValueAtTime(1, now);
+        if (fadeStart > now) fadeGainNode.gain.setValueAtTime(1, fadeStart);
+        fadeGainNode.gain.linearRampToValueAtTime(0.0001, fadeEnd);
+        fadeScheduled = true;
+        return true;
+      } catch (_) {
+        return false;
+      }
+    }
+
+    function beginFallbackFade() {
+      clearInterval(fadeInterval);
+      const started = performance.now();
+      const startVolume = audio.volume;
+
+      fadeInterval = setInterval(() => {
+        const p = Math.min(1, (performance.now() - started) / SLEEP_FADE_MS);
+        const eased = p * p * (3 - 2 * p);
+        try { audio.volume = startVolume * Math.max(0, 1 - eased); } catch (_) {}
+        if (p >= 1) {
+          clearInterval(fadeInterval);
+          fadeInterval = null;
+        }
+      }, 100);
+    }
+
+    function forceSleepStopIfDue() {
+      if (!sleepStopAt || Date.now() < sleepStopAt) return false;
+      closePlayer();
+      return true;
+    }
+
     function finishSleepTimer() {
       clearTimeout(sleepTimeout);
       clearInterval(sleepTicker);
-      clearInterval(fadeInterval);
-      clearTimeout(fadeStopTimeout);
-      sleepTimeout = sleepTicker = fadeInterval = fadeStopTimeout = null;
+      sleepTimeout = sleepTicker = null;
 
-      const fadeMs = 30000;
-      const hasGain = ensureFadeAudioGraph();
-
-      if (hasGain && audioContext && fadeGainNode) {
-        try {
-          const now = audioContext.currentTime;
-          fadeGainNode.gain.cancelScheduledValues(now);
-          fadeGainNode.gain.setValueAtTime(Math.max(0.0001, fadeGainNode.gain.value || 1), now);
-          fadeGainNode.gain.linearRampToValueAtTime(0.0001, now + (fadeMs / 1000));
-        } catch (_) {}
-      } else {
-        const started = performance.now();
-        const startVolume = audio.volume;
-        fadeInterval = setInterval(() => {
-          const p = Math.min(1, (performance.now() - started) / fadeMs);
-          const eased = p * p * (3 - 2 * p);
-          try { audio.volume = startVolume * Math.max(0, 1 - eased); } catch (_) {}
-        }, 200);
+      if (!fadeScheduled) {
+        if (!scheduleAudioClockFade(0)) beginFallbackFade();
       }
 
+      updateSleepUi();
+
+      clearTimeout(fadeStopTimeout);
+      const remainingToStop = Math.max(0, sleepStopAt - Date.now());
       fadeStopTimeout = setTimeout(() => {
         fadeStopTimeout = null;
         closePlayer();
-      }, fadeMs + 350);
+      }, remainingToStop + 120);
     }
 
     function armSleepTimer(endTime) {
       clearSleepTimer({persistState:false});
+
       sleepTimerEnd = Number(endTime) || 0;
       const remaining = sleepTimerEnd - Date.now();
-      if (remaining <= 0) { sleepTimerEnd = 0; updateSleepUi(); return; }
+
+      if (remaining <= 0) {
+        sleepTimerEnd = 0;
+        updateSleepUi();
+        return;
+      }
+
+      sleepStopAt = sleepTimerEnd + SLEEP_FADE_MS;
+
+      // Schedule the fade now on the audio engine. On iPhone this is more
+      // resilient than waiting for a foreground JS timeout after the screen locks.
+      scheduleAudioClockFade(remaining);
+
       sleepTimeout = setTimeout(finishSleepTimer, remaining);
-      sleepTicker = setInterval(updateSleepUi, 15000);
+      fadeStopTimeout = setTimeout(() => {
+        fadeStopTimeout = null;
+        closePlayer();
+      }, remaining + SLEEP_FADE_MS + 120);
+
+      sleepTicker = setInterval(() => {
+        updateSleepUi();
+        forceSleepStopIfDue();
+      }, 1000);
+
       updateSleepUi();
       persist(true);
     }
@@ -1214,7 +1270,8 @@
         updateMediaSessionPosition(index, audio.currentTime);
       }
 
-      if (sleepTimerEnd && Date.now() >= sleepTimerEnd && !fadeInterval) finishSleepTimer();
+      if (sleepTimerEnd && Date.now() >= sleepTimerEnd && !fadeScheduled && !fadeInterval) finishSleepTimer();
+      forceSleepStopIfDue();
       persist();
     });
 
@@ -1249,9 +1306,12 @@
     // app is visible, so locking/unlocking the phone does not require a source
     // swap and therefore does not interrupt the chant.
     document.addEventListener('visibilitychange', () => {
-      if (!document.hidden && backgroundPlaylist) {
-        updateBackgroundTrack();
-        updateMediaSessionPosition();
+      if (!document.hidden) {
+        if (forceSleepStopIfDue()) return;
+        if (backgroundPlaylist) {
+          updateBackgroundTrack();
+          updateMediaSessionPosition();
+        }
       }
     });
 
@@ -1346,8 +1406,18 @@
     if (restored && Number.isFinite(Number(restored.volume))) setUserVolume(Number(restored.volume), false);
     else setUserVolume(1, false);
 
-    if (restored?.sleepTimerEnd && Number(restored.sleepTimerEnd) > Date.now()) armSleepTimer(Number(restored.sleepTimerEnd));
-    else updateSleepUi();
+    if (restored?.sleepStopAt && Number(restored.sleepStopAt) <= Date.now()) {
+      clearState();
+      updateSleepUi();
+    } else if (restored?.sleepTimerEnd && Number(restored.sleepTimerEnd) > Date.now()) {
+      armSleepTimer(Number(restored.sleepTimerEnd));
+    } else if (restored?.sleepTimerEnd && restored?.sleepStopAt && Number(restored.sleepStopAt) > Date.now()) {
+      sleepTimerEnd = Number(restored.sleepTimerEnd);
+      sleepStopAt = Number(restored.sleepStopAt);
+      finishSleepTimer();
+    } else {
+      updateSleepUi();
+    }
 
     if (restored) setMinimized(Boolean(restored.minimized), false);
 
