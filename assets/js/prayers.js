@@ -50,6 +50,7 @@
     modalText.textContent = prayer.text;
     modal.classList.add('is-open');
     modal.setAttribute('aria-hidden', 'false');
+    document.body.classList.add('oa-prayer-modal-open');
     modal.querySelector('.oa-modal-panel')?.scrollTo({ top: 0, behavior: 'auto' });
     document.body.style.overflow = 'hidden';
     document.getElementById('prayer-modal-close').focus();
@@ -58,6 +59,7 @@
   function closeModal() {
     modal.classList.remove('is-open');
     modal.setAttribute('aria-hidden', 'true');
+    document.body.classList.remove('oa-prayer-modal-open');
     document.body.style.overflow = '';
   }
 

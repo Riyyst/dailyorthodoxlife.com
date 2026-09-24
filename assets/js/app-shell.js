@@ -301,7 +301,13 @@
       </button>
       <section class="oa-accessibility-panel" aria-label="Accessibility and language options" hidden>
         <header><strong>Accessibility</strong><button class="oa-accessibility-close" type="button" aria-label="Close accessibility options">×</button></header>
-        <label class="oa-a11y-field"><span>Language</span><select data-a11y-language>${supportedLanguages.map(([code,name]) => `<option value="${code}">${name}</option>`).join('')}</select></label>
+        <div class="oa-a11y-field oa-a11y-language-field">
+          <span>Language</span>
+          <button class="oa-a11y-language-button" data-a11y-language-button type="button" aria-haspopup="listbox" aria-expanded="false"></button>
+          <div class="oa-a11y-language-menu" data-a11y-language-menu role="listbox" hidden>
+            ${supportedLanguages.map(([code,name]) => `<button type="button" role="option" data-language-code="${code}">${name}</button>`).join('')}
+          </div>
+        </div>
         <label class="oa-a11y-field"><span>Text size</span><select data-a11y-font><option value="0.9">90%</option><option value="1">100%</option><option value="1.15">115%</option><option value="1.3">130%</option></select></label>
         <label class="oa-a11y-switch"><span>High contrast</span><input type="checkbox" data-a11y-contrast /></label>
         <label class="oa-a11y-switch"><span>Reduce motion</span><input type="checkbox" data-a11y-motion /></label>
@@ -313,23 +319,43 @@
     const toggle = shell.querySelector('.oa-accessibility-toggle');
     const panel = shell.querySelector('.oa-accessibility-panel');
     const close = shell.querySelector('.oa-accessibility-close');
-    const language = shell.querySelector('[data-a11y-language]');
+    const languageButton = shell.querySelector('[data-a11y-language-button]');
+    const languageMenu = shell.querySelector('[data-a11y-language-menu]');
     const font = shell.querySelector('[data-a11y-font]');
     const contrast = shell.querySelector('[data-a11y-contrast]');
     const motion = shell.querySelector('[data-a11y-motion]');
     const links = shell.querySelector('[data-a11y-links]');
     const reset = shell.querySelector('.oa-a11y-reset');
 
-    language.value = settings.language || defaultLanguage;
+    const languageName = code => supportedLanguages.find(([value]) => value === code)?.[1] || 'English';
+    const syncLanguageUi = () => {
+      if (languageButton) languageButton.textContent = languageName(settings.language || defaultLanguage);
+      languageMenu?.querySelectorAll('[data-language-code]').forEach(button => {
+        const selected = button.dataset.languageCode === (settings.language || defaultLanguage);
+        button.classList.toggle('is-selected', selected);
+        button.setAttribute('aria-selected', String(selected));
+      });
+    };
+    syncLanguageUi();
     font.value = String(settings.fontScale || 1);
     contrast.checked = Boolean(settings.contrast);
     motion.checked = Boolean(settings.reduceMotion);
     links.checked = Boolean(settings.underlineLinks);
 
+    const showLanguageMenu = show => {
+      if (!languageMenu || !languageButton) return;
+      languageMenu.hidden = !show;
+      languageButton.setAttribute('aria-expanded', String(show));
+      if (show) {
+        const selected = languageMenu.querySelector('.is-selected');
+        selected?.scrollIntoView({ block: 'nearest' });
+      }
+    };
+
     const showPanel = show => {
       panel.hidden = !show;
       toggle.setAttribute('aria-expanded', String(show));
-      if (show) language.focus();
+      if (!show) showLanguageMenu(false);
     };
 
     toggle.addEventListener('click', () => showPanel(panel.hidden));
@@ -338,7 +364,18 @@
       if (event.key === 'Escape' && !panel.hidden) showPanel(false);
     });
 
-    language.addEventListener('change', () => setLanguage(language.value));
+    languageButton?.addEventListener('click', event => {
+      event.stopPropagation();
+      showLanguageMenu(languageMenu?.hidden);
+    });
+    languageMenu?.querySelectorAll('[data-language-code]').forEach(button => {
+      button.addEventListener('click', () => setLanguage(button.dataset.languageCode));
+    });
+    document.addEventListener('click', event => {
+      if (!languageMenu || languageMenu.hidden) return;
+      if (!languageMenu.contains(event.target) && !languageButton?.contains(event.target)) showLanguageMenu(false);
+    });
+
     font.addEventListener('change', () => {
       settings.fontScale = Number(font.value);
       saveSettings();
@@ -371,7 +408,7 @@
       }
 
       applySettings();
-      language.value = settings.language;
+      syncLanguageUi();
       font.value = '1';
       contrast.checked = false;
       motion.checked = false;
@@ -389,7 +426,7 @@
     window.addEventListener('pageshow', () => {
       settings = readSettings();
       applySettings();
-      language.value = settings.language || defaultLanguage;
+      syncLanguageUi();
 
       // BFCache can restore old DOM, so enforce exactly one control again.
       document.querySelectorAll('.oa-accessibility').forEach((el, index) => {
@@ -445,6 +482,10 @@
     {title:'We bow down before Your Cross', tradition:'Russian', meta:'Russian Orthodox chant', src:'russian/russian-assets/music/We bow down before Your Cross.mp3'},
     {title:'We Praise Thee', tradition:'Russian', meta:'Russian Orthodox chant', src:'russian/russian-assets/music/We Praise Thee.mp3'}
   ];
+
+  const iosShufflePlaylists = [{"id":1,"src":"assets/audio-playlists/shuffle-1.m3u8","order":[8,2,18,0,6,7,17,14,19,12,11,9,13,3,16,4,10,5,15,1],"starts":[0.0,742.087,1392.091,1629.336,2044.682,2178.377,2511.752,2841.025,3100.918,3316.924,3769.156,3956.219,4166.766,4409.13,4784.901,5331.122,5400.712,5831.811,6445.166,6910.328],"total":7067.376},{"id":2,"src":"assets/audio-playlists/shuffle-2.m3u8","order":[11,19,9,3,16,15,18,17,10,5,7,0,1,2,4,12,14,13,8,6],"starts":[0.0,187.063,403.069,613.616,989.388,1535.608,2000.771,2238.015,2567.288,2998.387,3611.742,3945.117,4360.464,4517.512,5167.517,5237.107,5689.339,5949.231,6191.595,6933.682],"total":7067.376},{"id":3,"src":"assets/audio-playlists/shuffle-3.m3u8","order":[14,17,5,6,19,1,2,3,10,15,7,8,0,12,18,16,11,13,9,4],"starts":[0.0,259.892,589.166,1202.521,1336.216,1552.222,1709.27,2359.275,2735.047,3166.145,3631.308,3964.682,4706.769,5122.116,5574.348,5811.592,6357.812,6544.875,6787.239,6997.786],"total":7067.376},{"id":4,"src":"assets/audio-playlists/shuffle-4.m3u8","order":[5,7,12,3,6,1,8,17,19,11,4,16,2,13,10,0,18,14,15,9],"starts":[0.0,613.355,946.73,1398.962,1774.733,1908.428,2065.476,2807.562,3136.836,3352.842,3539.905,3609.495,4155.716,4805.721,5048.085,5479.184,5894.531,6131.775,6391.667,6856.829],"total":7067.376},{"id":5,"src":"assets/audio-playlists/shuffle-5.m3u8","order":[4,14,9,16,12,10,18,19,13,11,15,2,0,8,1,7,5,17,3,6],"starts":[0.0,69.59,329.482,540.029,1086.25,1538.482,1969.58,2206.824,2422.831,2665.195,2852.258,3317.42,3967.425,4382.772,5124.859,5281.907,5615.282,6228.637,6557.91,6933.682],"total":7067.376},{"id":6,"src":"assets/audio-playlists/shuffle-6.m3u8","order":[12,14,2,1,10,5,3,11,8,18,6,17,4,16,19,0,15,13,9,7],"starts":[0.0,452.232,712.124,1362.129,1519.177,1950.276,2563.631,2939.402,3126.465,3868.552,4105.796,4239.491,4568.764,4638.354,5184.575,5400.581,5815.928,6281.091,6523.455,6734.002],"total":7067.376}];
+  const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) ||
+    (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
 
   const isEmbeddedAppPage = window.self !== window.top;
 
@@ -647,6 +688,8 @@
   player.classList.add('notranslate');
   player.setAttribute('translate', 'no');
 
+  if (isIOS) player.classList.add('oa-ios-player');
+
   const ui = {
     title: player.querySelector('#audio-player-title'),
     meta: player.querySelector('#audio-player-meta'),
@@ -679,6 +722,9 @@
   let sleepTimerTicker = null;
   let fadeInterval = null;
   let userVolume = 1;
+  let activeShufflePlaylist = null;
+  let activeShufflePosition = 0;
+  const nativeHlsShuffle = isIOS && Boolean(audio.canPlayType('application/vnd.apple.mpegurl'));
 
   const WINDOW_STATE_PREFIX = 'orthodoxAudio:';
   const readState = () => {
@@ -707,6 +753,7 @@
       sleepTimerEnd: sleepTimerEnd || 0,
       volume: userVolume,
       minimized: player.classList.contains('is-minimized'),
+      shufflePlaylistId: activeShufflePlaylist?.id || 0,
       updatedAt: now,
       closed: false
     };
@@ -739,13 +786,92 @@
     } catch (_) {}
   }
 
+  function playlistTrackAt(time) {
+    if (!activeShufflePlaylist) return null;
+    const starts = activeShufflePlaylist.starts;
+    let position = starts.length - 1;
+    for (let i = 0; i < starts.length; i += 1) {
+      if (time < starts[i]) {
+        position = Math.max(0, i - 1);
+        break;
+      }
+    }
+    const trackIndex = activeShufflePlaylist.order[position];
+    return { position, trackIndex, start: starts[position] };
+  }
+
+  function syncShufflePlaylistMetadata() {
+    if (!activeShufflePlaylist) return;
+    const current = playlistTrackAt(audio.currentTime || 0);
+    if (!current || current.position === activeShufflePosition) return;
+    activeShufflePosition = current.position;
+    index = current.trackIndex;
+    const track = tracks[index];
+    if (ui.title) ui.title.textContent = track.title;
+    if (ui.meta) ui.meta.textContent = track.meta;
+    setMediaSession(track);
+    persist(true);
+    dispatch();
+  }
+
+  function startIOSShuffle(playlistId = 0, seekTo = 0, shouldPlay = true) {
+    if (!nativeHlsShuffle || !iosShufflePlaylists.length) return false;
+
+    let playlist = iosShufflePlaylists.find(item => item.id === Number(playlistId));
+    if (!playlist) playlist = iosShufflePlaylists[Math.floor(Math.random() * iosShufflePlaylists.length)];
+
+    activeShufflePlaylist = playlist;
+    shuffleMode = true;
+    activeShufflePosition = 0;
+    index = playlist.order[0];
+
+    const firstTrack = tracks[index];
+    ui.title.textContent = firstTrack.title;
+    ui.meta.textContent = firstTrack.meta;
+    setMediaSession(firstTrack);
+
+    audio.src = appUrl(playlist.src);
+    audio.preload = 'auto';
+    player.hidden = false;
+    player.style.removeProperty('display');
+    player.classList.add('is-visible');
+    player.setAttribute('aria-hidden', 'false');
+
+    const begin = () => {
+      const target = Math.max(0, Number(seekTo) || 0);
+      try { audio.currentTime = target; } catch (_) {}
+      syncShufflePlaylistMetadata();
+
+      if (shouldPlay) {
+        desiredPlaying = true;
+        audio.play().catch(() => {
+          if (ui.play) ui.play.innerHTML = playIcon;
+          dispatch();
+        });
+      } else {
+        desiredPlaying = false;
+      }
+
+      persist(true);
+      dispatch();
+    };
+
+    if (audio.readyState >= 1) begin();
+    else audio.addEventListener('loadedmetadata', begin, { once: true });
+    return true;
+  }
+
   function setTrack(nextIndex, options = {}) {
+    activeShufflePlaylist = null;
+    activeShufflePosition = 0;
     if (typeof options.shuffle === 'boolean') shuffleMode = options.shuffle;
     index = (nextIndex + tracks.length) % tracks.length;
     const track = tracks[index];
     ui.title.textContent = track.title;
     ui.meta.textContent = track.meta;
     audio.src = appUrl(track.src);
+    player.hidden = false;
+    player.style.removeProperty('display');
     player.classList.add('is-visible');
     player.setAttribute('aria-hidden', 'false');
     setMediaSession(track);
@@ -784,15 +910,36 @@
   }
 
   function startRandom() {
+    if (startIOSShuffle(0, 0, true)) return;
     setTrack(randomIndex(index), { currentTime: 0, play: true, shuffle: true });
   }
 
   function nextTrack() {
+    if (activeShufflePlaylist) {
+      const nextPos = (activeShufflePosition + 1) % activeShufflePlaylist.order.length;
+      if (nextPos === 0) {
+        startIOSShuffle(0, 0, true);
+      } else {
+        activeShufflePosition = nextPos;
+        audio.currentTime = activeShufflePlaylist.starts[nextPos];
+        syncShufflePlaylistMetadata();
+        audio.play().catch(() => {});
+      }
+      return;
+    }
     if (shuffleMode) startRandom();
     else start(index >= tracks.length - 1 ? 0 : index + 1);
   }
 
   function previousTrack() {
+    if (activeShufflePlaylist) {
+      const previousPos = activeShufflePosition <= 0 ? 0 : activeShufflePosition - 1;
+      activeShufflePosition = previousPos;
+      audio.currentTime = activeShufflePlaylist.starts[previousPos];
+      syncShufflePlaylistMetadata();
+      audio.play().catch(() => {});
+      return;
+    }
     if (shuffleMode) startRandom();
     else start(index <= 0 ? tracks.length - 1 : index - 1);
   }
@@ -816,7 +963,10 @@
   function setUserVolume(value, shouldPersist = true) {
     const next = Number(value);
     userVolume = Number.isFinite(next) ? Math.max(0, Math.min(1, next)) : 1;
-    if (!fadeInterval) audio.volume = userVolume;
+
+    // iOS Safari/PWAs intentionally reserve media output volume for the
+    // hardware/system volume controls. Other browsers use the website slider.
+    if (!isIOS && !fadeInterval) audio.volume = userVolume;
     if (ui.volume) ui.volume.value = String(userVolume);
     if (shouldPersist) persist(true);
   }
@@ -943,21 +1093,31 @@
   }
 
   function closePlayer() {
-    clearSleepTimer({ persist: false, restoreVolume: false });
     desiredPlaying = false;
-    audio.pause();
-    audio.removeAttribute('src');
-    audio.load();
-    index = -1;
+    activeShufflePlaylist = null;
+    activeShufflePosition = 0;
+    shuffleMode = false;
 
-    // Remove the compact-state class first so its positioning rules can never
-    // keep the shell visible after the close button is pressed.
-    player.classList.remove('is-minimized');
-    player.classList.remove('is-visible');
+    clearSleepTimer({ persist: false, restoreVolume: false });
+
+    // Hide first so pause/load events can never leave a tiny shell behind.
+    player.classList.remove('is-visible', 'is-minimized');
     player.setAttribute('aria-hidden', 'true');
+    player.hidden = true;
+    player.style.setProperty('display', 'none', 'important');
+
+    index = -1;
+    try { audio.pause(); } catch (_) {}
+    try {
+      audio.removeAttribute('src');
+      audio.load();
+    } catch (_) {}
 
     clearState();
-    dispatch();
+    setTimeout(clearState, 80);
+    window.dispatchEvent(new CustomEvent('orthodoxaudiochange', {
+      detail: { index: -1, playing: false, desiredPlaying: false }
+    }));
   }
 
   ui.play?.addEventListener('click', toggle);
@@ -1015,6 +1175,9 @@
   });
 
   audio.addEventListener('timeupdate', () => {
+    if (activeShufflePlaylist) syncShufflePlaylistMetadata();
+    if (sleepTimerEnd && Date.now() >= sleepTimerEnd && !fadeInterval) finishSleepTimer();
+
     if (ui.scrub) ui.scrub.value = audio.duration ? String((audio.currentTime / audio.duration) * 100) : '0';
     if (ui.current) ui.current.textContent = fmt(audio.currentTime);
     if (ui.duration) ui.duration.textContent = fmt(audio.duration);
@@ -1023,6 +1186,8 @@
   audio.addEventListener('durationchange', () => { if (ui.duration) ui.duration.textContent = fmt(audio.duration); });
   audio.addEventListener('play', () => {
     desiredPlaying = true;
+    player.hidden = false;
+    player.style.removeProperty('display');
     if (ui.play) ui.play.innerHTML = pauseIcon;
     player.classList.add('is-visible');
     persist(true);
@@ -1034,7 +1199,10 @@
     persist(true);
     dispatch();
   });
-  audio.addEventListener('ended', nextTrack);
+  audio.addEventListener('ended', () => {
+    if (activeShufflePlaylist && shuffleMode) startIOSShuffle(0, 0, true);
+    else nextTrack();
+  });
 
   function isInternalAppPage(target) {
     const sameApp = target.protocol === 'file:'
@@ -1076,9 +1244,9 @@
     window.scrollTo(0, 0);
   }
 
-  /* Once audio is active, keep the top document alive and load internal pages in
-     the app frame. The audio element stays in the top document, so there is no
-     stop/restart between pages. */
+  /* Keep navigation native and reliable on mobile.
+     Audio state is persisted immediately before an internal navigation so the
+     next page can restore it, without an iframe shell that can freeze or blank. */
   document.addEventListener('click', event => {
     const link = event.target.closest?.('a[href]');
     if (!link || link.target === '_blank' || link.hasAttribute('download')) return;
@@ -1086,11 +1254,7 @@
     if (!href || href.startsWith('#') || href.startsWith('javascript:') || href.startsWith('mailto:') || href.startsWith('tel:')) return;
     let target;
     try { target = new URL(href, window.location.href); } catch (_) { return; }
-    if (index >= 0 && isInternalAppPage(target)) {
-      event.preventDefault();
-      persist(true);
-      openPersistentRoute(target.href, true);
-    }
+    if (index >= 0 && isInternalAppPage(target)) persist(true);
   }, true);
 
   window.addEventListener('message', event => {
@@ -1169,7 +1333,13 @@
 
   if (restored) setPlayerMinimized(Boolean(restored.minimized), false);
 
-  if (restored && Number.isInteger(restored.index) && restored.index >= 0 && restored.index < tracks.length) {
+  if (restored?.shuffle && restored?.shufflePlaylistId && nativeHlsShuffle) {
+    startIOSShuffle(
+      Number(restored.shufflePlaylistId),
+      Number(restored.currentTime) || 0,
+      Boolean(restored.playing)
+    );
+  } else if (restored && Number.isInteger(restored.index) && restored.index >= 0 && restored.index < tracks.length) {
     setTrack(restored.index, {
       currentTime: Number(restored.currentTime) || 0,
       play: Boolean(restored.playing),
