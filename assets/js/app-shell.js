@@ -790,6 +790,7 @@
       index = (Number(nextIndex) + tracks.length) % tracks.length;
       const track = tracks[index];
       resetFadeGain();
+      if (sleepTimerEnd > Date.now()) rescheduleActiveSleepFade();
       updateTrackUi(index);
       showPlayer();
 
@@ -847,6 +848,7 @@
       index = firstIndex;
 
       resetFadeGain();
+      if (sleepTimerEnd > Date.now()) rescheduleActiveSleepFade();
       updateTrackUi(index);
       showPlayer();
 
@@ -999,32 +1001,39 @@
 
     const SLEEP_FADE_MS = 10000;
 
-    function scheduleAudioClockFade(delayMs = 0) {
+    function scheduleAudioClockFade(delayMs = 0, fadeMs = SLEEP_FADE_MS) {
       if (!ensureFadeAudioGraph() || !audioContext || !fadeGainNode) return false;
 
       try {
         const now = audioContext.currentTime;
-        const fadeStart = now + Math.max(0, Number(delayMs) || 0) / 1000;
-        const fadeEnd = fadeStart + (SLEEP_FADE_MS / 1000);
+        const safeDelay = Math.max(0, Number(delayMs) || 0);
+        const safeFade = Math.max(100, Number(fadeMs) || SLEEP_FADE_MS);
+        const fadeStart = now + (safeDelay / 1000);
+        const fadeEnd = fadeStart + (safeFade / 1000);
 
         fadeGainNode.gain.cancelScheduledValues(now);
         fadeGainNode.gain.setValueAtTime(1, now);
         if (fadeStart > now) fadeGainNode.gain.setValueAtTime(1, fadeStart);
+
+        // Full volume until the final fade window, then smoothly reduce all the
+        // way to effectively silent at the selected timer endpoint.
         fadeGainNode.gain.linearRampToValueAtTime(0.0001, fadeEnd);
         fadeScheduled = true;
         return true;
       } catch (_) {
+        fadeScheduled = false;
         return false;
       }
     }
 
-    function beginFallbackFade() {
+    function beginFallbackFade(fadeMs = SLEEP_FADE_MS) {
       clearInterval(fadeInterval);
       const started = performance.now();
+      const duration = Math.max(100, Number(fadeMs) || SLEEP_FADE_MS);
       const startVolume = audio.volume;
 
       fadeInterval = setInterval(() => {
-        const p = Math.min(1, (performance.now() - started) / SLEEP_FADE_MS);
+        const p = Math.min(1, (performance.now() - started) / duration);
         const eased = p * p * (3 - 2 * p);
         try { audio.volume = startVolume * Math.max(0, 1 - eased); } catch (_) {}
         if (p >= 1) {
@@ -1035,53 +1044,67 @@
     }
 
     function forceSleepStopIfDue() {
-      if (!sleepStopAt || Date.now() < sleepStopAt) return false;
+      if (!sleepTimerEnd || Date.now() < sleepTimerEnd) return false;
       closePlayer();
       return true;
     }
 
     function finishSleepTimer() {
       clearTimeout(sleepTimeout);
-      clearInterval(sleepTicker);
-      sleepTimeout = sleepTicker = null;
+      sleepTimeout = null;
 
+      const remainingToStop = Math.max(0, sleepTimerEnd - Date.now());
+      if (remainingToStop <= 0) {
+        closePlayer();
+        return;
+      }
+
+      // If the pre-scheduled Web Audio fade was lost (for example because a new
+      // chant source was selected), begin the remaining fade immediately.
       if (!fadeScheduled) {
-        if (!scheduleAudioClockFade(0)) beginFallbackFade();
+        const fadeDuration = Math.min(SLEEP_FADE_MS, remainingToStop);
+        if (!scheduleAudioClockFade(0, fadeDuration)) beginFallbackFade(fadeDuration);
       }
 
       updateSleepUi();
 
       clearTimeout(fadeStopTimeout);
-      const remainingToStop = Math.max(0, sleepStopAt - Date.now());
       fadeStopTimeout = setTimeout(() => {
         fadeStopTimeout = null;
         closePlayer();
-      }, remainingToStop + 120);
+      }, remainingToStop + 80);
     }
 
     function armSleepTimer(endTime) {
       clearSleepTimer({persistState:false});
 
+      // This is the exact time playback must be fully silent and stopped.
       sleepTimerEnd = Number(endTime) || 0;
-      const remaining = sleepTimerEnd - Date.now();
+      sleepStopAt = sleepTimerEnd;
 
+      const remaining = sleepTimerEnd - Date.now();
       if (remaining <= 0) {
         sleepTimerEnd = 0;
+        sleepStopAt = 0;
         updateSleepUi();
         return;
       }
 
-      sleepStopAt = sleepTimerEnd + SLEEP_FADE_MS;
+      const fadeDuration = Math.min(SLEEP_FADE_MS, remaining);
+      const fadeDelay = Math.max(0, remaining - fadeDuration);
 
-      // Schedule the fade now on the audio engine. On iPhone this is more
-      // resilient than waiting for a foreground JS timeout after the screen locks.
-      scheduleAudioClockFade(remaining);
+      // Stay at normal volume until the LAST 10 seconds of the chosen timer.
+      // Then ramp continuously to silence exactly at sleepTimerEnd.
+      fadeScheduled = scheduleAudioClockFade(fadeDelay, fadeDuration);
 
-      sleepTimeout = setTimeout(finishSleepTimer, remaining);
+      // Foreground fallback begins at the same final-10-second boundary.
+      sleepTimeout = setTimeout(finishSleepTimer, fadeDelay);
+
+      // Hard stop exactly when the selected timer expires.
       fadeStopTimeout = setTimeout(() => {
         fadeStopTimeout = null;
         closePlayer();
-      }, remaining + SLEEP_FADE_MS + 120);
+      }, remaining + 80);
 
       sleepTicker = setInterval(() => {
         updateSleepUi();
@@ -1090,6 +1113,25 @@
 
       updateSleepUi();
       persist(true);
+    }
+
+    function rescheduleActiveSleepFade() {
+      if (!sleepTimerEnd || sleepTimerEnd <= Date.now()) return;
+
+      const remaining = sleepTimerEnd - Date.now();
+      const fadeDuration = Math.min(SLEEP_FADE_MS, remaining);
+      const fadeDelay = Math.max(0, remaining - fadeDuration);
+
+      fadeScheduled = scheduleAudioClockFade(fadeDelay, fadeDuration);
+
+      clearTimeout(sleepTimeout);
+      sleepTimeout = setTimeout(finishSleepTimer, fadeDelay);
+
+      clearTimeout(fadeStopTimeout);
+      fadeStopTimeout = setTimeout(() => {
+        fadeStopTimeout = null;
+        closePlayer();
+      }, remaining + 80);
     }
 
     function setSleepMinutes(minutes) {
@@ -1406,15 +1448,11 @@
     if (restored && Number.isFinite(Number(restored.volume))) setUserVolume(Number(restored.volume), false);
     else setUserVolume(1, false);
 
-    if (restored?.sleepStopAt && Number(restored.sleepStopAt) <= Date.now()) {
+    if (restored?.sleepTimerEnd && Number(restored.sleepTimerEnd) <= Date.now()) {
       clearState();
       updateSleepUi();
     } else if (restored?.sleepTimerEnd && Number(restored.sleepTimerEnd) > Date.now()) {
       armSleepTimer(Number(restored.sleepTimerEnd));
-    } else if (restored?.sleepTimerEnd && restored?.sleepStopAt && Number(restored.sleepStopAt) > Date.now()) {
-      sleepTimerEnd = Number(restored.sleepTimerEnd);
-      sleepStopAt = Number(restored.sleepStopAt);
-      finishSleepTimer();
     } else {
       updateSleepUi();
     }
