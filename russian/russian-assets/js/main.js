@@ -99,6 +99,79 @@ function updateCivilDate() {
     return `https://orthocal.info/api/slavic/${currentCalendar}/${y}/${m}/${d}/?translation=kjv`;
   }
 
+  function gregorianToJdn(year, month, day) {
+    const a = Math.floor((14 - month) / 12);
+    const y = year + 4800 - a;
+    const m = month + 12 * a - 3;
+    return day
+      + Math.floor((153 * m + 2) / 5)
+      + (365 * y)
+      + Math.floor(y / 4)
+      - Math.floor(y / 100)
+      + Math.floor(y / 400)
+      - 32045;
+  }
+
+  function jdnToJulian(jdn) {
+    const c = jdn + 32082;
+    const d = Math.floor((4 * c + 3) / 1461);
+    const e = c - Math.floor((1461 * d) / 4);
+    const m = Math.floor((5 * e + 2) / 153);
+    return {
+      day: e - Math.floor((153 * m + 2) / 5) + 1,
+      month: m + 3 - 12 * Math.floor(m / 10),
+      year: d - 4800 + Math.floor(m / 10),
+    };
+  }
+
+  function expectedLiturgicalDate(date) {
+    const civil = {
+      year: date.getFullYear(),
+      month: date.getMonth() + 1,
+      day: date.getDate(),
+    };
+
+    if (currentCalendar !== "julian") return civil;
+    return jdnToJulian(gregorianToJdn(civil.year, civil.month, civil.day));
+  }
+
+  function responseMatchesRequestedDate(data, date) {
+    const expected = expectedLiturgicalDate(date);
+    const actual = {
+      year: Number(data?.year),
+      month: Number(data?.month),
+      day: Number(data?.day),
+    };
+
+    return Number.isFinite(actual.year)
+      && Number.isFinite(actual.month)
+      && Number.isFinite(actual.day)
+      && actual.year === expected.year
+      && actual.month === expected.month
+      && actual.day === expected.day;
+  }
+
+  function canonicalCommemorations(data) {
+    const stories = Array.isArray(data?.stories) ? data.stories.filter(Boolean) : [];
+    const seen = new Set();
+
+    return stories
+      .map(story => {
+        const title = String(story?.title || story?.name || "").trim();
+        const detail = String(
+          story?.story || story?.text || story?.description || story?.life || ""
+        ).trim();
+        return { title, detail };
+      })
+      .filter(item => {
+        if (!item.title || isAdministrativeCommemoration(item.title)) return false;
+        const key = normalizeCommemorationLabel(item.title);
+        if (!key || seen.has(key)) return false;
+        seen.add(key);
+        return true;
+      });
+  }
+
   // Normalise Orthocal references like "1 Timothy 1.18-20, 2.8-15" -> "1 Timothy 1:18-20"
   function normaliseReference(ref) {
     if (!ref) return "";
@@ -329,108 +402,26 @@ function findStoryForSaint(data, name, index = -1) {
     }
   });
 
-  // Orthocal commonly returns saints and stories in corresponding order. Use that
-  // only when name matching could not identify a story and the indexed story exists.
-  if (!best && index >= 0 && stories[index]) best = stories[index];
+  // Do not fall back by array position. The stories collection can contain
+  // material that is not one of today's displayed commemorations.
   return best;
 }
 
-function findCommemorationDetail(data, name, index = -1) {
+function findCommemorationDetail(data, name) {
   if (!data || !name) return "";
-  const n = name.trim().toLowerCase();
+  const target = normalizeCommemorationLabel(name);
+  const stories = Array.isArray(data.stories) ? data.stories.filter(Boolean) : [];
 
-  // Orthocal's documented daily endpoint supplies lives of the saints in `stories`.
-  const story = findStoryForSaint(data, name, index);
-  if (story) {
-    const text = story.story || story.text || story.description || story.life || "";
-    if (text) return String(text).trim();
-  }
+  const exact = stories.find(story =>
+    normalizeCommemorationLabel(story?.title || story?.name || "") === target
+  );
+  if (!exact) return "";
 
-  // Helper: deep search data for a long string mentioning this name
-  function deepSearch(obj) {
-    if (!obj || typeof obj !== "object") return "";
-    if (Array.isArray(obj)) {
-      for (const v of obj) {
-        const res = typeof v === "object" ? deepSearch(v) : "";
-        if (res) return res;
-      }
-      return "";
-    }
-    // plain object
-    for (const [key, value] of Object.entries(obj)) {
-      if (typeof value === "string") {
-        const text = value.trim();
-        if (text.length > 200) {
-          const tLower = text.toLowerCase();
-          // Only use significant words from the saint's name, not generic titles
-          const STOP_WORDS = new Set([
-            "saint","st","holy","most","great","martyr","martyrs","venerable",
-            "apostle","hieromartyr","wonderworker","and","of","the","with",
-            "from","in","on","for","to","our","father","mother","virgin",
-            "confessor","bishop","priest","monk","nun","new","equal","apostles"
-          ]);
-          const tokens = n
-            .split(/\s+/)
-            .map((w) => w.replace(/[^\p{L}\p{N}]/gu, ""))
-            .filter((w) => w.length > 3 && !STOP_WORDS.has(w));
-          let hits = 0;
-          for (const w of tokens) {
-            if (tLower.includes(w)) {
-              hits++;
-              if (hits >= 2) {
-                return text;
-              }
-            }
-          }
-        }
-      } else if (typeof value === "object") {
-        const res = deepSearch(value);
-        if (res) return res;
-      }
-    }
-    return "";
-  }
-
-  // Try a 'commemorations' array if present
-    if (Array.isArray(data.commemorations)) {
-      for (const item of data.commemorations) {
-        const title = (item.title || item.name || item.commemoration || "").trim();
-        const text =
-          item.text ||
-          item.description ||
-          item.bio ||
-          item.life ||
-          item.synaxarion ||
-          "";
-        if (!text) continue;
-        const tLower = title.toLowerCase();
-        if (tLower && (tLower.includes(n) || n.includes(tLower))) {
-          return String(text).trim();
-        }
-      }
-    }
-
-    // Try a 'saint_details' style array if present
-    if (Array.isArray(data.saint_details)) {
-      for (const item of data.saint_details) {
-        const title = (item.title || item.name || "").trim();
-        const text = item.text || item.description || "";
-        if (!text) continue;
-        const tLower = title.toLowerCase();
-        if (tLower && (tLower.includes(n) || n.includes(tLower))) {
-          return String(text).trim();
-        }
-      }
-    }
-
-    
-
-  // Fallback: deep search any nested long text that mentions this name
-  const deep = deepSearch(data);
-  if (deep) return deep;
-
-  return "";
+  return String(
+    exact.story || exact.text || exact.description || exact.life || ""
+  ).trim();
 }
+
 function findFeastDetail(data, name) {
   if (!data || !name) return "";
   const n = name.trim().toLowerCase();
@@ -567,32 +558,25 @@ function buildFeastDescription(text) {
         liturgicalDateEl.textContent = `${d} ${monthName(m)} ${y}`;
       }
 
-      const namedSaints = Array.isArray(data.saints) ? data.saints.filter(Boolean).map(String) : [];
-      const storyTitles = Array.isArray(data.stories)
-        ? data.stories.map(story => story?.title || story?.name || "").filter(Boolean)
-        : [];
-      const saintsArray = [];
+      // Fail closed if the API response does not match the exact liturgical date
+      // requested. It is better to show no commemorations than a list for another day.
+      const dateVerified = responseMatchesRequestedDate(data, selectedDate);
+      const commemorations = dateVerified ? canonicalCommemorations(data) : [];
 
-      // Use only the date-specific commemorations returned by Orthocal. Some Orthocal
-      // records also contain administrative anniversaries (for example a canonization
-      // anniversary) whose saint's actual feast falls on another date. Those are not
-      // shown in the saints list.
-      [...namedSaints, ...storyTitles].forEach(title => {
-        if (!title || isAdministrativeCommemoration(title)) return;
-        const normalized = normalizeCommemorationLabel(title);
-        const alreadyListed = saintsArray.some(name => {
-          const n = normalizeCommemorationLabel(name);
-          return n === normalized || n.includes(normalized) || normalized.includes(n);
-        });
-        if (!alreadyListed) saintsArray.push(title);
-      });
-
-      // Saints of the day with the corresponding life/story returned by Orthocal.
+      // Orthocal documents `stories` as the daily Commemorations collection.
+      // We never merge in names from another field, another date, or a fuzzy match.
 
 if (saintsListEl) {
         saintsListEl.innerHTML = "";
-        if (saintsArray.length > 0) {
-          saintsArray.forEach((s, idx) => {
+        if (!dateVerified) {
+          const li = document.createElement("li");
+          const nameEl = document.createElement("div");
+          nameEl.className = "saint-name";
+          nameEl.textContent = "Commemorations could not be verified for this date.";
+          li.appendChild(nameEl);
+          saintsListEl.appendChild(li);
+        } else if (commemorations.length > 0) {
+          commemorations.forEach(({ title: s, detail }) => {
             const li = document.createElement("li");
 
             // Build a card similar to scripture cards, with expandable detail.
@@ -622,7 +606,7 @@ if (saintsListEl) {
             body.className = "reading-body";
             body.style.display = "none";
 
-            const fullText = findCommemorationDetail(data, s, idx);
+            const fullText = detail;
             if (fullText) {
               const text = String(fullText).trim();
               if (/[<>&]/.test(text)) {

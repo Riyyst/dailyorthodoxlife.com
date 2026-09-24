@@ -1,4 +1,4 @@
-const CACHE='orthodox-companion-v34';
+const CACHE='orthodox-companion-v37';
 const CORE=[
   './','./index.html','./404.html','./calendar.html','./prayers.html','./listen.html','./study-bible.html',
   './assets/css/app.css','./assets/css/cover.css','./assets/css/reader.css',

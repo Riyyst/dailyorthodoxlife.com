@@ -6236,3 +6236,122 @@ html.oa-persistent-audio-shell body {
     max-height: 220px;
   }
 }
+
+
+/* =========================================================
+   Mk31, stable navigation, header accessibility, player polish
+   ========================================================= */
+
+/* Accessibility is part of the page header, never an overlay. */
+body > .oa-accessibility {
+  position: static !important;
+}
+
+.oa-topbar {
+  align-items: center !important;
+  gap: 14px !important;
+}
+
+.oa-topbar > .oa-accessibility {
+  position: relative !important;
+  margin-left: auto !important;
+  top: auto !important;
+  right: auto !important;
+  flex: 0 0 auto;
+}
+
+.oa-accessibility-row {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  min-height: 54px;
+  padding: 8px clamp(12px, 2vw, 24px) 4px;
+}
+
+.oa-accessibility-row > .oa-accessibility {
+  position: relative !important;
+  top: auto !important;
+  right: auto !important;
+  margin: 0 !important;
+}
+
+/* When audio keeps the top document alive, the current framed page owns the
+   accessibility control. The old parent page's copy is hidden behind it. */
+html.oa-persistent-audio-shell > body > .oa-accessibility,
+html.oa-persistent-audio-shell > body > main > .oa-accessibility-row,
+html.oa-persistent-audio-shell > body > .oa-page > .oa-accessibility-row {
+  visibility: hidden !important;
+  pointer-events: none !important;
+}
+
+/* The persistent frame is active again so audio never unloads between pages. */
+.oa-persistent-frame {
+  display: block !important;
+  position: fixed !important;
+  inset: 0 !important;
+  width: 100% !important;
+  height: 100% !important;
+  border: 0 !important;
+  background: var(--oa-bg, #f7f4ee) !important;
+  z-index: 1250 !important;
+  opacity: 1 !important;
+  pointer-events: auto !important;
+}
+
+html.oa-persistent-audio-shell,
+html.oa-persistent-audio-shell body {
+  overflow: hidden !important;
+}
+
+html.oa-persistent-audio-shell > body > .oa-player {
+  z-index: 1500 !important;
+}
+
+/* Expanded shell: normal close control in the top-right corner. */
+.oa-player.is-visible:not(.is-minimized) {
+  position: fixed;
+}
+
+.oa-player.is-visible:not(.is-minimized) .oa-player-close {
+  position: absolute !important;
+  top: 9px !important;
+  right: 10px !important;
+  z-index: 10 !important;
+  width: 28px !important;
+  height: 28px !important;
+  min-width: 28px !important;
+  min-height: 28px !important;
+  background: transparent !important;
+}
+
+.oa-player.is-visible:not(.is-minimized) .oa-player-tools {
+  padding-right: 34px !important;
+}
+
+/* Minimized close remains in the compact inline tool row. */
+.oa-player.is-minimized .oa-player-close {
+  position: static !important;
+}
+
+/* Bible/calendar pages without the standard brand bar get a small reserved
+   utility row so the accessibility button cannot overlap their first heading. */
+body.app-bible-page .oa-accessibility-row,
+body.app-calendar-page .oa-accessibility-row {
+  margin-bottom: 2px;
+}
+
+@media (max-width: 760px) {
+  .oa-accessibility-row {
+    min-height: 50px;
+    padding: calc(6px + env(safe-area-inset-top)) 10px 3px;
+  }
+
+  .oa-topbar > .oa-accessibility {
+    margin-left: auto !important;
+  }
+
+  .oa-player.is-visible:not(.is-minimized) .oa-player-close {
+    top: 7px !important;
+    right: 8px !important;
+  }
+}
